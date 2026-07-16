@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@theme {
+  /* Brand Colors from your Design Guide */
+  --color-primary-dark: #102A1B;
+  --color-brand-green: #2F6B3C;
+  --color-brand-lime: #85CB18;
+  --color-brand-soft: #EFF8E3;
+  --color-neutral-bg: #F8FAF8;
+
+  /* Typography */
+  --font-serif: "DM Serif Display", serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-[#202722] bg-neutral-bg;
+  }
+}
