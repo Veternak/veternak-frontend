@@ -24,9 +24,9 @@ export default function InputField({
             aria-describedby={[errorId, helperId].filter(Boolean).join(' ') || undefined}
             aria-invalid={Boolean(error)}
             className={[
-              'mt-2 min-h-12 w-full rounded-xl border bg-white/80 px-4 py-3 pl-12 text-base text-main-text transition',
-              'placeholder:text-gray-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
-              error ? 'border-[#D92D20]' : 'border-standard-border',
+            'mt-2 min-h-12 w-full rounded-2xl border bg-white/90 px-4 py-3 pl-12 text-sm font-semibold text-main-text shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition',
+            'placeholder:text-gray-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
+              error ? 'border-[#D92D20]' : 'border-[#DCE8D6]',
             ].join(' ')}
             id={id}
             type={type}
@@ -41,9 +41,9 @@ export default function InputField({
           aria-describedby={[errorId, helperId].filter(Boolean).join(' ') || undefined}
           aria-invalid={Boolean(error)}
           className={[
-            'mt-2 min-h-12 w-full rounded-xl border bg-white/80 px-4 py-3 text-base text-main-text transition',
+            'mt-2 min-h-12 w-full rounded-2xl border bg-white/90 px-4 py-3 text-sm font-semibold text-main-text shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition',
             'placeholder:text-gray-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
-            error ? 'border-[#D92D20]' : 'border-standard-border',
+            error ? 'border-[#D92D20]' : 'border-[#DCE8D6]',
           ].join(' ')}
           id={id}
           type={type}
