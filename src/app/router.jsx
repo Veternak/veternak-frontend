@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
+import AddAnimalPage from '../pages/farmer/AddAnimalPage'
+import AnimalProfilePage from '../pages/farmer/AnimalProfilePage'
 import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
 import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
 import VetProfilePage from '../pages/farmer/VetProfilePage'
@@ -50,6 +52,14 @@ export const router = createBrowserRouter([
       {
         path: 'ternak',
         element: <AnimalList />,
+      },
+      {
+        path: 'ternak/tambah',
+        element: <AddAnimalPage />,
+      },
+      {
+        path: 'ternak/:animalId',
+        element: <AnimalProfilePage />,
       },
       {
         path: 'konsultasi',
