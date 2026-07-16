@@ -1,5 +1,5 @@
 
-
+import logo from "../assets/logo-full.png";
 // Helper for SVGs since we aren't using Lucide-React currently
 const Icon = ({ name }) => {
   const icons = {
@@ -26,8 +26,13 @@ export default function DashboardShell({ children, activeTab, setActiveTab }) {
       
       {/* --- DESKTOP SIDEBAR --- */}
       <aside className="hidden md:flex w-64 bg-white border-r border-gray-100 flex-col fixed h-full z-50">
-        <div className="p-8">
-          <h1 className="text-2xl font-bold text-primary-dark">Veternak</h1>
+        <div className="p-8 pb-4">
+          {/* 2. REPLACED TEXT WITH LOGO */}
+          <img 
+            src={logo} 
+            alt="Veternak Logo" 
+            className="h-16 w-auto object-contain -ml-2" 
+          />
         </div>
         <nav className="flex-grow px-4 space-y-2">
           {menuItems.map((item) => (

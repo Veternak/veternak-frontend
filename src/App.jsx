@@ -7,6 +7,7 @@ import ScreeningForm from "./components/ScreeningForm"
 import DashboardShell from "./components/DashboardShell"
 import AnimalList from "./components/AnimalList"
 import CaseStatus from "./components/CaseStatus";
+import FarmerHome from "./components/FarmerHome";
 function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing', 'dashboard'
   const [activeTab, setActiveTab] = useState('beranda');
@@ -28,7 +29,9 @@ function App() {
   // Logic to show the Dashboard
 return (
   <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab}>
-    {activeTab === 'beranda' && <div className="p-4"><h2 className="font-serif text-3xl">Ringkasan</h2></div>}
+    {activeTab === 'beranda' && (
+  <FarmerHome onLapor={() => setActiveTab('lapor')} />
+)}
     {activeTab === 'ternak' && <AnimalList />}
     {activeTab === 'lapor' && <ScreeningForm />}
     
