@@ -1,67 +1,6 @@
 import { useMemo, useState } from "react";
-
-const doctors = [
-  {
-    id: "okta",
-    name: "drh. Oktavianus K. Rohi",
-    photo: "https://i.pravatar.cc/180?img=12",
-    expertise: "Ruminansia dan kasus kambing",
-    area: "Sleman Barat",
-    distance: 2.4,
-    eta: "25 menit",
-    available: "Tersedia sekarang",
-    mode: ["Chat", "Kunjungan"],
-    species: ["Sapi", "Kambing"],
-    visitFee: "Estimasi Rp85.000",
-    nextSlot: "Hari ini, 15:30",
-    reason: "Cocok untuk kasus lemas, napas berat, dan laporan dengan risiko penularan awal.",
-  },
-  {
-    id: "siti",
-    name: "drh. Siti Aminah",
-    photo: "https://i.pravatar.cc/180?img=47",
-    expertise: "Kesehatan sapi potong",
-    area: "Mlati, Sleman",
-    distance: 4.8,
-    eta: "40 menit",
-    available: "Bisa chat",
-    mode: ["Chat"],
-    species: ["Sapi"],
-    visitFee: "Chat demo",
-    nextSlot: "Hari ini, 16:00",
-    reason: "Berpengalaman menangani penurunan nafsu makan dan pemantauan sapi potong.",
-  },
-  {
-    id: "bima",
-    name: "drh. Bima Prakoso",
-    photo: "https://i.pravatar.cc/180?img=52",
-    expertise: "Kunjungan lapangan dan biosecurity",
-    area: "Gamping, Sleman",
-    distance: 5.6,
-    eta: "50 menit",
-    available: "Kunjungan sore",
-    mode: ["Kunjungan"],
-    species: ["Sapi", "Kambing", "Domba"],
-    visitFee: "Estimasi Rp95.000",
-    nextSlot: "Hari ini, 17:15",
-    reason: "Relevan bila ternak perlu dipisahkan dan kondisi kandang perlu ditinjau langsung.",
-  },
-  {
-    id: "puskeswan",
-    name: "Puskeswan Demo Sleman",
-    photo: "https://i.pravatar.cc/180?img=68",
-    expertise: "Layanan kesehatan hewan wilayah",
-    area: "Kabupaten Sleman",
-    distance: 6.1,
-    eta: "60 menit",
-    available: "Rujukan wilayah",
-    mode: ["Rujukan", "Kunjungan"],
-    species: ["Sapi", "Kerbau", "Kambing", "Domba"],
-    visitFee: "Data demo",
-    nextSlot: "Besok, 09:00",
-    reason: "Fallback wilayah bila dokter pribadi belum tersedia atau kasus perlu rujukan.",
-  },
-];
+import { useNavigate } from "react-router-dom";
+import { demoDoctors } from "../data/demoDoctors";
 
 const filters = ["Paling sesuai", "Terdekat", "Tersedia sekarang", "Kunjungan"];
 
@@ -84,18 +23,19 @@ function CheckIcon() {
 
 export default function CaseStatus() {
   const [selectedFilter, setSelectedFilter] = useState(filters[0]);
-  const [selectedDoctorId, setSelectedDoctorId] = useState(doctors[0].id);
+  const [selectedDoctorId, setSelectedDoctorId] = useState(demoDoctors[0].id);
   const [consultMode, setConsultMode] = useState("Chat");
+  const navigate = useNavigate();
 
   const sortedDoctors = useMemo(() => {
-    const list = [...doctors];
+    const list = [...demoDoctors];
     if (selectedFilter === "Terdekat") return list.sort((a, b) => a.distance - b.distance);
     if (selectedFilter === "Tersedia sekarang") return list.sort((a, b) => Number(!a.available.includes("sekarang")) - Number(!b.available.includes("sekarang")));
     if (selectedFilter === "Kunjungan") return list.sort((a, b) => Number(!a.mode.includes("Kunjungan")) - Number(!b.mode.includes("Kunjungan")));
     return list;
   }, [selectedFilter]);
 
-  const selectedDoctor = doctors.find((doctor) => doctor.id === selectedDoctorId) ?? doctors[0];
+  const selectedDoctor = demoDoctors.find((doctor) => doctor.id === selectedDoctorId) ?? demoDoctors[0];
 
   return (
     <section className="mx-auto max-w-7xl pb-10">
@@ -246,6 +186,7 @@ export default function CaseStatus() {
             </button>
             <button
               type="button"
+              onClick={() => navigate(`/peternak/konsultasi/dokter/${selectedDoctor.id}`)}
               className="min-h-12 rounded-xl border border-[#D4DCD6] bg-white px-5 text-sm font-bold text-brand-green"
             >
               Lihat Profil Dokter

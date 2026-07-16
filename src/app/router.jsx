@@ -4,6 +4,7 @@ import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
 import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
+import VetProfilePage from '../pages/farmer/VetProfilePage'
 import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: 'konsultasi',
         element: <CaseStatus />,
+      },
+      {
+        path: 'konsultasi/dokter/:vetId',
+        element: <VetProfilePage />,
       },
       {
         path: 'lapor',
