@@ -60,6 +60,7 @@ const doctors = [
     distance: "2,4 km",
     eta: "25 menit",
     visit: "Kunjungan tersedia",
+    photo: "https://i.pravatar.cc/160?img=12",
     reason: "Cocok untuk gejala lemas, napas berat, dan risiko penularan awal.",
   },
   {
@@ -69,6 +70,7 @@ const doctors = [
     distance: "4,8 km",
     eta: "40 menit",
     visit: "Chat dulu",
+    photo: "https://i.pravatar.cc/160?img=47",
     reason: "Berpengalaman menangani laporan penurunan nafsu makan pada sapi.",
   },
   {
@@ -78,6 +80,7 @@ const doctors = [
     distance: "6,1 km",
     eta: "60 menit",
     visit: "Rujukan lapangan",
+    photo: "https://i.pravatar.cc/160?img=68",
     reason: "Fallback demo bila dokter pribadi belum tersedia.",
   },
 ];
@@ -459,21 +462,30 @@ export default function ScreeningForm() {
                           onClick={() => setSelectedDoctor(doctor.name)}
                           className={`rounded-2xl border p-5 text-left transition-all ${selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"}`}
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <span className="mb-2 inline-flex rounded-full bg-[#FFF7D6] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">Data Demo</span>
-                              <h4 className="font-bold text-primary-dark">{doctor.name}</h4>
-                              <p className="mt-1 text-sm text-[#69736C]">{doctor.expertise}</p>
+                          <div className="flex items-start gap-4">
+                            <img
+                              src={doctor.photo}
+                              alt={`Foto demo ${doctor.name}`}
+                              className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <span className="mb-2 inline-flex rounded-full bg-[#FFF7D6] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">Data Demo</span>
+                                  <h4 className="font-bold text-primary-dark">{doctor.name}</h4>
+                                  <p className="mt-1 text-sm text-[#69736C]">{doctor.expertise}</p>
+                                </div>
+                                {selected && <span className="text-brand-green"><CheckIcon /></span>}
+                              </div>
+                              <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#505B53]">
+                                <span className="rounded-full bg-white px-3 py-1.5">{doctor.area}</span>
+                                <span className="rounded-full bg-white px-3 py-1.5">{doctor.distance}</span>
+                                <span className="rounded-full bg-white px-3 py-1.5">{doctor.eta}</span>
+                                <span className="rounded-full bg-white px-3 py-1.5">{doctor.visit}</span>
+                              </div>
+                              <p className="mt-3 text-sm leading-relaxed text-[#69736C]">{doctor.reason}</p>
                             </div>
-                            {selected && <span className="text-brand-green"><CheckIcon /></span>}
                           </div>
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#505B53]">
-                            <span className="rounded-full bg-white px-3 py-1.5">{doctor.area}</span>
-                            <span className="rounded-full bg-white px-3 py-1.5">{doctor.distance}</span>
-                            <span className="rounded-full bg-white px-3 py-1.5">{doctor.eta}</span>
-                            <span className="rounded-full bg-white px-3 py-1.5">{doctor.visit}</span>
-                          </div>
-                          <p className="mt-3 text-sm leading-relaxed text-[#69736C]">{doctor.reason}</p>
                         </button>
                       );
                     })}
