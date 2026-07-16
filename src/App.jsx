@@ -1,5 +1,6 @@
 import Navbar from "./components/Navbar"
 import Hero from "./components/Hero"
+import Features from "./components/Features" 
 
 function App() {
   return (
@@ -7,7 +8,8 @@ function App() {
       <Navbar />
       <main>
         <Hero />
-        {/* We will add "Kenapa Veternak" and "Akademi" sections next! */}
+        {/* You just needed to add this line below! */}
+        <Features /> 
       </main>
     </div>
   )
