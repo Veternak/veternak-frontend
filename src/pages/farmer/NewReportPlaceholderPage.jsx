@@ -15,7 +15,7 @@ export default function NewReportPlaceholderPage() {
 
         <Link
           className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-lime px-5 py-3 text-sm font-bold text-primary-dark"
-          to="/peternak/beranda"
+          to="/peternak/dashboard"
         >
           Kembali ke Beranda Peternak
         </Link>

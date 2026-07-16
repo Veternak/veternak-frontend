@@ -75,7 +75,7 @@ export default function LoginPage() {
       }
 
       setIsSubmitting(false)
-      navigate('/peternak/beranda')
+      navigate('/peternak/dashboard')
     }, 700)
   }
 

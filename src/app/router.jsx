@@ -2,13 +2,12 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
-import FarmerDashboardPage from '../pages/farmer/FarmerDashboardPage'
-import NewReportPlaceholderPage from '../pages/farmer/NewReportPlaceholderPage'
+import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
+import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
 import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 // Your UI Components
-import FarmerHome from '../components/FarmerHome'
 import AnimalList from '../components/AnimalList'
 import CaseStatus from '../components/CaseStatus'
 import ScreeningForm from '../components/ScreeningForm'
@@ -36,8 +35,16 @@ export const router = createBrowserRouter([
     element: <DashboardShell />, // This wraps all the pages below
     children: [
       {
+        index: true,
+        element: <Navigate replace to="/peternak/dashboard" />,
+      },
+      {
+        path: 'beranda',
+        element: <Navigate replace to="/peternak/dashboard" />,
+      },
+      {
         path: 'dashboard',
-        element: <FarmerHome />,
+        element: <FarmerHomeRoute />,
       },
       {
         path: 'ternak',
@@ -50,6 +57,14 @@ export const router = createBrowserRouter([
       {
         path: 'lapor',
         element: <ScreeningForm />,
+      },
+      {
+        path: 'laporan/baru',
+        element: <Navigate replace to="/peternak/lapor" />,
+      },
+      {
+        path: 'akademi',
+        element: <FarmerAcademyPage />,
       },
     ],
   },
