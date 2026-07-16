@@ -7,6 +7,8 @@
   --color-brand-lime: #85CB18;
   --color-brand-soft: #EFF8E3;
   --color-neutral-bg: #F8FAF8;
+  --color-main-text: #202722;
+  --color-standard-border: #DCE8D6;
 
   /* Typography */
   --font-serif: "DM Serif Display", serif;
@@ -43,5 +45,65 @@
   .doctor-select:focus,
   .doctor-input:focus {
     border-color: #2F6B3C;
+  }
+
+  .hero-bg-layer {
+    opacity: 0;
+    filter: drop-shadow(0 28px 48px rgba(19, 59, 38, 0.12));
+    will-change: transform, opacity, filter;
+  }
+
+  .hero-bg-one {
+    animation: hero-bg-rise 2.35s cubic-bezier(0.22, 1, 0.36, 1) 0.12s forwards;
+  }
+
+  .hero-bg-two {
+    animation: hero-bg-rise-strong 2.55s cubic-bezier(0.22, 1, 0.36, 1) 0.82s forwards;
+  }
+
+  .hero-content-enter {
+    opacity: 0;
+    transform: translateY(22px);
+    animation: hero-content-rise 1.35s cubic-bezier(0.22, 1, 0.36, 1) 1.45s forwards;
+  }
+}
+
+@keyframes hero-bg-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(12%) scale(1.04);
+    filter: blur(8px) drop-shadow(0 20px 36px rgba(19, 59, 38, 0.08));
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0) drop-shadow(0 32px 54px rgba(19, 59, 38, 0.16));
+  }
+}
+
+@keyframes hero-bg-rise-strong {
+  0% {
+    opacity: 0;
+    transform: translateY(16%) scale(1.045);
+    filter: blur(8px) drop-shadow(0 20px 36px rgba(19, 59, 38, 0.10));
+  }
+
+  100% {
+    opacity: 0.98;
+    transform: translateY(0) scale(1);
+    filter: blur(0) drop-shadow(0 38px 68px rgba(19, 59, 38, 0.20));
+  }
+}
+
+@keyframes hero-content-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

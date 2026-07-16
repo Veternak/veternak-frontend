@@ -23,7 +23,25 @@ const initialValues = {
   consent: false,
 }
 
-function validateRegister(values) {
+const registerSteps = [
+  {
+    description: 'Akun dasar',
+    fields: ['name', 'phone', 'email', 'password', 'confirmPassword'],
+    title: 'Daftar akun',
+  },
+  {
+    description: 'Profil layanan',
+    fields: ['strNumber', 'province', 'city', 'species', 'services', 'schedule'],
+    title: 'Data profesional',
+  },
+  {
+    description: 'Verifikasi STR',
+    fields: ['strDocument', 'consent'],
+    title: 'Dokumen & persetujuan',
+  },
+]
+
+function getRegisterErrors(values) {
   const nextErrors = {}
 
   if (!values.name.trim()) nextErrors.name = 'Nama lengkap wajib diisi.'
@@ -37,24 +55,81 @@ function validateRegister(values) {
   if (!values.species) nextErrors.species = 'Pilih spesialisasi spesies.'
   if (values.services.length === 0) nextErrors.services = 'Pilih minimal satu layanan.'
   if (!values.schedule.trim()) nextErrors.schedule = 'Jadwal praktik sederhana wajib diisi.'
-  if (!values.strDocument) nextErrors.strDocument = 'Unggah dokumen STR demo.'
+  if (!values.strDocument) nextErrors.strDocument = 'Unggah dokumen STR.'
   if (!values.consent) nextErrors.consent = 'Persetujuan verifikasi wajib dicentang.'
 
   return nextErrors
 }
 
+function validateRegister(values, fields) {
+  const allErrors = getRegisterErrors(values)
+  if (!fields) return allErrors
+
+  return fields.reduce((filteredErrors, field) => {
+    if (allErrors[field]) filteredErrors[field] = allErrors[field]
+    return filteredErrors
+  }, {})
+}
+
 function FormSection({ children, description, title }) {
   return (
-    <section className="rounded-2xl border border-standard-border bg-white/75 p-4">
-      <h2 className="text-sm font-bold text-primary-dark">{title}</h2>
-      {description ? <p className="mt-1 text-sm leading-6 text-gray-600">{description}</p> : null}
-      <div className="mt-4 grid gap-5">{children}</div>
+    <section className="rounded-[26px] border border-standard-border bg-white/90 p-5 shadow-[0_18px_48px_rgba(19,59,38,0.09)] sm:p-6">
+      <div className="max-w-xl">
+        <h2 className="text-base font-extrabold text-primary-dark">{title}</h2>
+        {description ? <p className="mt-1 text-sm leading-6 text-gray-600">{description}</p> : null}
+      </div>
+      <div className="mt-6 grid gap-5">{children}</div>
     </section>
+  )
+}
+
+function StepIndicator({ currentStep }) {
+  return (
+    <div className="mb-7 rounded-[26px] border border-standard-border bg-white/90 p-2 shadow-[0_16px_42px_rgba(19,59,38,0.08)]">
+      <div className="grid gap-2 sm:grid-cols-3">
+        {registerSteps.map((step, index) => {
+          const isActive = index === currentStep
+          const isDone = index < currentStep
+
+          return (
+            <div
+              className={[
+                'rounded-2xl px-3 py-3 transition sm:px-4',
+                isActive ? 'bg-brand-green text-white shadow-[0_12px_28px_rgba(19,59,38,0.22)]' : '',
+                isDone ? 'bg-brand-lime/25 text-primary-dark' : '',
+                !isActive && !isDone ? 'bg-white text-gray-500' : '',
+              ].join(' ')}
+              key={step.title}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className={[
+                    'grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-extrabold',
+                    isActive ? 'bg-white text-brand-green' : '',
+                    isDone ? 'bg-brand-lime text-primary-dark' : '',
+                    !isActive && !isDone ? 'bg-brand-soft text-gray-500' : '',
+                  ].join(' ')}
+                >
+                  {isDone ? '✓' : index + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold">{step.title}</p>
+                  <p className={['mt-0.5 text-xs', isActive ? 'text-white/75' : 'text-gray-500'].join(' ')}>
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
 export default function DoctorRegisterPage() {
   const navigate = useNavigate()
+  const [currentStep, setCurrentStep] = useState(0)
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -112,20 +187,20 @@ export default function DoctorRegisterPage() {
     }
   }
 
-  const infoPanel = (
-    <section className="max-w-md rounded-[28px] border border-white/70 bg-white/55 p-8 shadow-sm backdrop-blur">
-      <span className="inline-flex rounded-full bg-brand-lime px-4 py-2 text-xs font-bold text-primary-dark">
-        Verifikasi Dokter
-      </span>
-      <h2 className="mt-6 text-2xl font-bold leading-tight text-brand-green">
-        Akun dokter perlu ditinjau sebelum menerima kasus.
-      </h2>
-      <p className="mt-4 leading-7 text-gray-700">
-        Nomor STR dan dokumen pendukung dipakai untuk proses verifikasi. Pada fase ini,
-        unggahan masih simulasi dan belum dikirim ke penyimpanan dokumen sungguhan.
-      </p>
-    </section>
-  )
+  function handleNextStep() {
+    const currentFields = registerSteps[currentStep].fields
+    const nextErrors = validateRegister(values, currentFields)
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) return
+
+    setCurrentStep((step) => Math.min(step + 1, registerSteps.length - 1))
+    setErrors({})
+  }
+
+  function handlePreviousStep() {
+    setCurrentStep((step) => Math.max(step - 1, 0))
+    setErrors({})
+  }
 
   return (
     <AuthLayout
@@ -138,99 +213,142 @@ export default function DoctorRegisterPage() {
           </Link>
         </>
       }
-      infoPanel={infoPanel}
-      subtitle="Lengkapi data akun dan dokumen STR untuk proses verifikasi."
-      title="Buat akun dokter hewan"
+      subtitle="Lengkapi data dokter dalam tiga langkah singkat."
+      title="Daftar dokter hewan"
       variant="register"
     >
       <form className="space-y-6" noValidate onSubmit={handleSubmit}>
-        <FormSection description="Data dasar untuk masuk ke akun dokter Veternak." title="Data akun">
-          <InputField error={errors.name} id="doctor-name" label="Nama Lengkap" name="name" onChange={handleChange} placeholder="Contoh: drh. Anindya Putri" value={values.name} />
-          <InputField error={errors.phone} id="doctor-phone" inputMode="tel" label="Nomor HP" name="phone" onChange={handleChange} placeholder="Contoh: 08123456789" value={values.phone} />
-          <InputField error={errors.email} id="doctor-email" label="Email Opsional" name="email" onChange={handleChange} placeholder="dokter@veternak.id" type="email" value={values.email} />
-          <div className="grid gap-5 md:grid-cols-2">
-            <PasswordInput error={errors.password} id="doctor-register-password" label="Password" name="password" onChange={handleChange} placeholder="Min. 8 karakter" value={values.password} />
-            <PasswordInput error={errors.confirmPassword} id="doctor-confirm-password" label="Konfirmasi Password" name="confirmPassword" onChange={handleChange} placeholder="Ulangi password" value={values.confirmPassword} />
-          </div>
-        </FormSection>
+        <StepIndicator currentStep={currentStep} />
 
-        <FormSection description="Data ini dipakai untuk proses verifikasi dokter dan area layanan demo." title="Data profesional">
-          <InputField error={errors.strNumber} id="doctor-str" label="Nomor STR" name="strNumber" onChange={handleChange} placeholder="Contoh: STR-123456" value={values.strNumber} />
-          <div className="grid gap-5 md:grid-cols-2">
-            <InputField error={errors.province} id="doctor-province" label="Provinsi" name="province" onChange={handleChange} placeholder="DI Yogyakarta" value={values.province} />
-            <InputField error={errors.city} id="doctor-city" label="Kabupaten/Kota" name="city" onChange={handleChange} placeholder="Sleman" value={values.city} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-primary-dark" htmlFor="doctor-species">
-              Spesialisasi Spesies
-            </label>
-            <select
-              aria-describedby={errors.species ? 'doctor-species-error' : undefined}
-              aria-invalid={Boolean(errors.species)}
-              className="mt-2 min-h-12 w-full rounded-xl border border-standard-border bg-white/80 px-4 py-3 text-base text-main-text focus:border-brand-green focus:outline-none focus:ring-4 focus:ring-brand-green/15"
-              id="doctor-species"
-              name="species"
-              onChange={handleChange}
-              value={values.species}
-            >
-              <option value="">Pilih spesialisasi</option>
-              <option value="Sapi">Sapi</option>
-              <option value="Kerbau">Kerbau</option>
-              <option value="Sapi dan Kerbau">Sapi dan Kerbau</option>
-            </select>
-            <FormError id="doctor-species-error">{errors.species}</FormError>
-          </div>
-
-          <fieldset>
-            <legend className="text-sm font-bold text-primary-dark">Layanan Tersedia</legend>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {['Konsultasi Online', 'Kunjungan Lapangan'].map((service) => (
-                <label key={service} className="flex min-h-12 items-center gap-3 rounded-xl border border-standard-border bg-white/80 px-4 py-3 text-sm font-semibold text-primary-dark">
-                  <input name="services" type="checkbox" value={service} onChange={handleChange} />
-                  {service}
-                </label>
-              ))}
+        {currentStep === 0 ? (
+          <FormSection description="Buat akses masuk untuk dashboard dokter." title="Daftar akun">
+            <InputField error={errors.name} id="doctor-name" label="Nama lengkap" name="name" onChange={handleChange} placeholder="Contoh: drh. Anindya Putri" value={values.name} />
+            <InputField error={errors.phone} id="doctor-phone" inputMode="tel" label="Nomor HP" name="phone" onChange={handleChange} placeholder="Contoh: 08123456789" value={values.phone} />
+            <InputField error={errors.email} id="doctor-email" label="Email opsional" name="email" onChange={handleChange} placeholder="dokter@veternak.id" type="email" value={values.email} />
+            <div className="grid gap-5 md:grid-cols-2">
+              <PasswordInput error={errors.password} id="doctor-register-password" label="Password" name="password" onChange={handleChange} placeholder="Min. 8 karakter" value={values.password} />
+              <PasswordInput error={errors.confirmPassword} id="doctor-confirm-password" label="Konfirmasi password" name="confirmPassword" onChange={handleChange} placeholder="Ulangi password" value={values.confirmPassword} />
             </div>
-            <FormError>{errors.services}</FormError>
-          </fieldset>
+          </FormSection>
+        ) : null}
 
-          <InputField helperText="Radius layanan akan dibuat dapat diatur saat sistem layanan tersedia." error={errors.schedule} id="doctor-schedule" label="Jadwal Praktik Sederhana" name="schedule" onChange={handleChange} placeholder="Senin-Jumat, 08.00-16.00 WIB" value={values.schedule} />
-        </FormSection>
+        {currentStep === 1 ? (
+          <FormSection description="Tentukan area praktik dan jenis layanan dokter." title="Data profesional">
+            <InputField error={errors.strNumber} id="doctor-str" label="Nomor STR" name="strNumber" onChange={handleChange} placeholder="Contoh: STR-123456" value={values.strNumber} />
+            <div className="grid gap-5 md:grid-cols-2">
+              <InputField error={errors.province} id="doctor-province" label="Provinsi" name="province" onChange={handleChange} placeholder="DI Yogyakarta" value={values.province} />
+              <InputField error={errors.city} id="doctor-city" label="Kabupaten/Kota" name="city" onChange={handleChange} placeholder="Sleman" value={values.city} />
+            </div>
 
-        <FormSection description="Upload ini masih demo; dokumen belum dikirim ke penyimpanan dokumen sungguhan." title="Dokumen STR dan persetujuan">
-          <div>
-            <label className="block text-sm font-bold text-primary-dark" htmlFor="doctor-str-document">
-              Dokumen STR
+            <div>
+              <label className="block text-sm font-bold text-primary-dark" htmlFor="doctor-species">
+                Spesialisasi spesies
+              </label>
+              <select
+                aria-describedby={errors.species ? 'doctor-species-error' : undefined}
+                aria-invalid={Boolean(errors.species)}
+                className={[
+                  'mt-2 min-h-12 w-full rounded-2xl border bg-white/90 px-4 py-3 text-sm font-semibold text-main-text shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition',
+                  'focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
+                  errors.species ? 'border-[#D92D20]' : 'border-standard-border',
+                ].join(' ')}
+                id="doctor-species"
+                name="species"
+                onChange={handleChange}
+                value={values.species}
+              >
+                <option value="">Pilih spesialisasi</option>
+                <option value="Sapi">Sapi</option>
+                <option value="Kerbau">Kerbau</option>
+                <option value="Sapi dan Kerbau">Sapi dan Kerbau</option>
+              </select>
+              <FormError id="doctor-species-error">{errors.species}</FormError>
+            </div>
+
+            <fieldset>
+              <legend className="text-sm font-bold text-primary-dark">Layanan tersedia</legend>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {['Konsultasi Online', 'Kunjungan Lapangan'].map((service) => (
+                  <label
+                    className="flex min-h-12 items-center gap-3 rounded-2xl border border-standard-border bg-white/90 px-4 py-3 text-sm font-semibold text-primary-dark shadow-[0_10px_24px_rgba(19,59,38,0.06)] transition hover:border-brand-green/50"
+                    key={service}
+                  >
+                    <input checked={values.services.includes(service)} className="h-4 w-4 accent-brand-green" name="services" onChange={handleChange} type="checkbox" value={service} />
+                    {service}
+                  </label>
+                ))}
+              </div>
+              <FormError>{errors.services}</FormError>
+            </fieldset>
+
+            <InputField helperText="Contoh singkat saja. Detail jadwal bisa disesuaikan nanti." error={errors.schedule} id="doctor-schedule" label="Jadwal praktik" name="schedule" onChange={handleChange} placeholder="Senin-Jumat, 08.00-16.00 WIB" value={values.schedule} />
+          </FormSection>
+        ) : null}
+
+        {currentStep === 2 ? (
+          <FormSection description="Unggah STR dan setujui proses verifikasi akun dokter." title="Dokumen STR dan persetujuan">
+            <div>
+              <label className="block text-sm font-bold text-primary-dark" htmlFor="doctor-str-document">
+                Dokumen STR
+              </label>
+              <input
+                accept=".pdf,.jpg,.jpeg,.png"
+                aria-describedby={errors.strDocument ? 'doctor-str-document-error' : undefined}
+                aria-invalid={Boolean(errors.strDocument)}
+                className={[
+                  'mt-2 block w-full rounded-2xl border border-dashed bg-white/90 px-4 py-4 text-sm font-semibold text-gray-700 shadow-[0_14px_32px_rgba(19,59,38,0.07)] transition',
+                  'file:mr-4 file:rounded-full file:border-0 file:bg-brand-lime file:px-4 file:py-2 file:font-extrabold file:text-primary-dark',
+                  'focus:border-brand-green focus:outline-none focus:ring-4 focus:ring-brand-green/15',
+                  errors.strDocument ? 'border-[#D92D20]' : 'border-standard-border',
+                ].join(' ')}
+                id="doctor-str-document"
+                name="strDocument"
+                onChange={handleChange}
+                type="file"
+              />
+              <p className="mt-2 text-sm text-gray-500">
+                PDF, JPG, atau PNG. {values.strDocument ? `File dipilih: ${values.strDocument.name}` : 'Belum ada file dipilih.'}
+              </p>
+              <FormError id="doctor-str-document-error">{errors.strDocument}</FormError>
+            </div>
+
+            <label className="flex gap-3 rounded-2xl border border-standard-border bg-white/90 p-4 text-sm leading-6 text-gray-700 shadow-[0_14px_32px_rgba(19,59,38,0.07)]">
+              <input className="mt-1 h-4 w-4 accent-brand-green" name="consent" checked={values.consent} onChange={handleChange} type="checkbox" />
+              <span>
+                Saya menyetujui verifikasi STR sebelum akun dokter dapat menerima kasus.
+              </span>
             </label>
-            <input
-              accept=".pdf,.jpg,.jpeg,.png"
-              aria-describedby={errors.strDocument ? 'doctor-str-document-error' : undefined}
-              aria-invalid={Boolean(errors.strDocument)}
-              className="mt-2 block w-full rounded-xl border border-dashed border-standard-border bg-white/80 px-4 py-4 text-sm text-gray-700 file:mr-4 file:rounded-full file:border-0 file:bg-brand-lime file:px-4 file:py-2 file:font-bold file:text-primary-dark"
-              id="doctor-str-document"
-              name="strDocument"
-              onChange={handleChange}
-              type="file"
-            />
-            <p className="mt-2 text-sm text-gray-500">
-              Format demo: PDF, JPG, atau PNG. {values.strDocument ? `File dipilih: ${values.strDocument.name}` : 'Belum ada file dipilih.'}
-            </p>
-            <FormError id="doctor-str-document-error">{errors.strDocument}</FormError>
-          </div>
+            <FormError>{errors.consent}</FormError>
+          </FormSection>
+        ) : null}
 
-          <label className="flex gap-3 rounded-2xl border border-standard-border bg-white/80 p-4 text-sm leading-6 text-gray-700">
-            <input className="mt-1 h-4 w-4" name="consent" checked={values.consent} onChange={handleChange} type="checkbox" />
-            <span>
-              Saya menyetujui proses verifikasi STR dan memahami akun perlu diverifikasi sebelum tampil publik atau menerima kasus.
-            </span>
-          </label>
-          <FormError>{errors.consent}</FormError>
-        </FormSection>
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+          {currentStep > 0 ? (
+            <button
+              className="min-h-12 rounded-2xl border border-standard-border bg-white px-5 text-sm font-extrabold text-brand-green shadow-[0_12px_28px_rgba(19,59,38,0.08)] transition hover:-translate-y-0.5 hover:border-brand-green/50"
+              onClick={handlePreviousStep}
+              type="button"
+            >
+              Kembali
+            </button>
+          ) : (
+            <span />
+          )}
 
-        <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Mengirim data demo...' : 'Daftar dan Ajukan Verifikasi'}
-        </Button>
+          {currentStep < registerSteps.length - 1 ? (
+            <button
+              className="min-h-12 rounded-2xl bg-brand-lime px-6 text-sm font-extrabold text-primary-dark shadow-[0_14px_32px_rgba(150,231,29,0.28)] transition hover:-translate-y-0.5 hover:bg-[#8fe115] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-green/20"
+              onClick={handleNextStep}
+              type="button"
+            >
+              Lanjut
+            </button>
+          ) : (
+            <Button disabled={isSubmitting} type="submit">
+              {isSubmitting ? 'Mengirim...' : 'Ajukan verifikasi'}
+            </Button>
+          )}
+        </div>
       </form>
     </AuthLayout>
   )

@@ -15,10 +15,10 @@ export default function PasswordInput({ error, id, label, leftIcon, ...props }) 
           aria-describedby={errorId}
           aria-invalid={Boolean(error)}
           className={[
-            'min-h-12 w-full rounded-xl border bg-white/80 px-4 py-3 pr-16 text-base text-main-text transition',
+            'min-h-12 w-full rounded-2xl border bg-white/90 px-4 py-3 pr-20 text-sm font-semibold text-main-text shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition',
             'placeholder:text-gray-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
             leftIcon ? 'pl-12' : '',
-            error ? 'border-[#D92D20]' : 'border-standard-border',
+            error ? 'border-[#D92D20]' : 'border-[#DCE8D6]',
           ].join(' ')}
           id={id}
           type={isVisible ? 'text' : 'password'}
@@ -30,7 +30,7 @@ export default function PasswordInput({ error, id, label, leftIcon, ...props }) 
           </div>
         ) : null}
         <button
-          className="absolute inset-y-1 right-1 rounded-lg px-3 text-sm font-bold text-brand-green transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-green/20"
+          className="absolute inset-y-1 right-1 rounded-xl px-3 text-xs font-extrabold text-brand-green transition hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-green/20"
           type="button"
           onClick={() => setIsVisible((current) => !current)}
         >

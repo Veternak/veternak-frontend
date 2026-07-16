@@ -140,7 +140,7 @@ export default function RegisterPage() {
         <>
           Sudah punya akun?{' '}
           <Link className="font-bold text-brand-green hover:underline" to="/masuk">
-            Masuk
+            Masuk di sini
           </Link>
         </>
       }
@@ -149,13 +149,11 @@ export default function RegisterPage() {
           <span className="inline-flex rounded-full bg-brand-lime px-4 py-1 text-xs font-medium text-primary-dark">
             Gabung Komunitas
           </span>
-          <h2 className="mt-7 font-serif text-2xl font-bold leading-snug text-brand-green">
-            Mulai Langkah Sehat untuk Ternak Anda.
+          <h2 className="mt-7 font-serif text-3xl font-bold leading-snug text-brand-green">
+            Mulai rapi dari laporan pertama.
           </h2>
-          <p className="mt-6 text-base leading-8 text-gray-700">
-            Hubungkan ternak Anda dengan layanan medis profesional, pantau
-            pertumbuhan secara digital, dan akses edukasi peternakan modern
-            dalam satu genggaman.
+          <p className="mt-5 text-base leading-8 text-gray-700">
+            Buat akun, lengkapi profil, lalu pantau kondisi ternak dalam satu alur kerja.
           </p>
           <div className="mt-10 flex items-center gap-4">
             <div className="flex -space-x-3">
@@ -164,13 +162,13 @@ export default function RegisterPage() {
               <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-white bg-[#8FB996] text-xs font-bold text-primary-dark">V</span>
             </div>
             <p className="text-base leading-6 text-gray-700">
-              Bergabung bersama 2,500+ Peternak & Dokter.
+              Bergabung bersama peternak dan dokter di ekosistem Veternak.
             </p>
           </div>
         </div>
       }
-      subtitle="Buat akun peternak dulu. Profil kandang dan ternak bisa dilengkapi setelah Anda masuk."
-      title="Lengkapi data diri Anda untuk memulai."
+      subtitle="Daftar singkat. Profil kandang bisa dilengkapi nanti."
+      title="Buat akun peternak"
       variant="register"
     >
       <form className="space-y-5" noValidate onSubmit={handleSubmit}>
@@ -207,9 +205,8 @@ export default function RegisterPage() {
               aria-describedby={errors.province ? 'province-error' : undefined}
               aria-invalid={Boolean(errors.province)}
               className={[
-                'mt-2 min-h-12 w-full rounded-xl border bg-white/80 px-4 py-3 text-base text-main-text transition',
-                'focus:border-brand-green focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-green/15',
-                errors.province ? 'border-[#D92D20]' : 'border-standard-border',
+                'doctor-select',
+                errors.province ? 'border-[#D92D20]' : '',
               ].join(' ')}
               id="province"
               name="province"
@@ -260,10 +257,10 @@ export default function RegisterPage() {
         />
 
         <div>
-          <label className="flex gap-3 rounded-xl border border-standard-border bg-neutral-bg p-4 text-sm leading-6 text-gray-700">
+          <label className="flex gap-3 rounded-2xl border border-[#DCE8D6] bg-white/70 p-4 text-sm leading-6 text-gray-700 shadow-[0_10px_24px_rgba(19,59,38,0.04)]">
             <input
               checked={values.consent}
-              className="mt-1 h-5 w-5 rounded border-standard-border accent-brand-green"
+              className="mt-1 h-5 w-5 rounded border-[#DCE8D6] accent-brand-green"
               name="consent"
               onChange={handleChange}
               type="checkbox"
