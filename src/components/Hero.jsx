@@ -1,9 +1,7 @@
 import heroBg from "../assets/hero-bg.png";
 
-export default function Hero() {
+export default function Hero({ onStart }) {
   return (
-    // 1. Changed justify-start to justify-center
-    // 2. Added pb-32 to ensure space at the bottom
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center py-20 overflow-hidden bg-white">
       
       {/* --- BACKGROUND LAYER --- */}
@@ -16,7 +14,6 @@ export default function Hero() {
       </div>
 
       {/* --- TEXT CONTENT --- */}
-      {/* Added mb-20 here to push away from the bottom illustration/next section */}
       <div className="relative z-40 max-w-5xl mx-auto text-center px-4 mb-20">
         <div className="inline-flex items-center gap-2 bg-brand-soft/50 border border-brand-green/20 px-3 py-1 rounded-full text-xs font-bold text-brand-green mb-8">
           <span className="bg-brand-lime px-1.5 py-0.5 rounded text-[10px] text-primary-dark">BARU</span>
@@ -33,10 +30,16 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-5">
-          <button className="w-full md:w-auto bg-brand-green text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-brand-green/90 transition-all shadow-xl shadow-brand-green/20">
+          {/* Main Action Button */}
+          <button 
+            onClick={onStart}
+            className="w-full md:w-auto bg-brand-green text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-brand-green/90 transition-all shadow-xl shadow-brand-green/20 cursor-pointer"
+          >
             Laporkan Gejala Sekarang
           </button>
-          <button className="w-full md:w-auto bg-white border border-gray-200 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all">
+
+          {/* Secondary Button */}
+          <button className="w-full md:w-auto bg-white border border-gray-200 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all cursor-pointer">
             Lihat Cara Kerja
           </button>
         </div>

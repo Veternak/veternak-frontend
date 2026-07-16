@@ -1,6 +1,6 @@
 import logo from "../assets/logo-full.png";
 
-export default function Navbar() {
+export default function Navbar({ onStart, onHome }) {
   return (
     // Increased Navbar height to h-24 to fit a bigger logo
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
