@@ -2,8 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
-import AddAnimalPage from '../pages/farmer/AddAnimalPage'
-import AnimalProfilePage from '../pages/farmer/AnimalProfilePage'
 import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
 import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
 import VetProfilePage from '../pages/farmer/VetProfilePage'
@@ -32,6 +30,60 @@ export const router = createBrowserRouter([
   {
     path: '/lupa-password',
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/dokter/masuk',
+    element: <DoctorLoginPage />,
+  },
+  {
+    path: '/dokter/daftar',
+    element: <DoctorRegisterPage />,
+  },
+  {
+    path: '/dokter/verifikasi-pending',
+    element: <DoctorVerificationPendingPage />,
+  },
+  {
+    path: '/dokter-app',
+    element: <DoctorShell />,
+    children: [
+      {
+        index: true,
+        element: <Navigate replace to="/dokter-app/dashboard" />,
+      },
+      {
+        path: 'dashboard',
+        element: <DoctorDashboardPage />,
+      },
+      {
+        path: 'kasus',
+        element: <DoctorCasesPage />,
+      },
+      {
+        path: 'kasus/:id',
+        element: <DoctorCaseDetailPage />,
+      },
+      {
+        path: 'konsultasi/:id',
+        element: <DoctorConsultationPage />,
+      },
+      {
+        path: 'kunjungan',
+        element: <DoctorVisitsPage />,
+      },
+      {
+        path: 'riwayat',
+        element: <DoctorHistoryPage />,
+      },
+      {
+        path: 'notifikasi',
+        element: <DoctorNotificationsPage />,
+      },
+      {
+        path: 'profil',
+        element: <DoctorProfilePage />,
+      },
+    ],
   },
   {
     path: '/peternak',
