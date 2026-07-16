@@ -1,6 +1,7 @@
 import heroBg from "../assets/hero-bg.png";
+import { Link } from 'react-router-dom'
 
-export default function Hero({ onStart }) {
+export default function Hero() {
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center py-20 overflow-hidden bg-white">
       
@@ -31,17 +32,17 @@ export default function Hero({ onStart }) {
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-5">
           {/* Main Action Button */}
-          <button 
-            onClick={onStart}
+          <Link
+            to="/daftar"
             className="w-full md:w-auto bg-brand-green text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-brand-green/90 transition-all shadow-xl shadow-brand-green/20 cursor-pointer"
           >
-            Laporkan Gejala Sekarang
-          </button>
+            Mulai sebagai Peternak
+          </Link>
 
           {/* Secondary Button */}
-          <button className="w-full md:w-auto bg-white border border-gray-200 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all cursor-pointer">
+          <a href="#produk" className="w-full md:w-auto bg-white border border-gray-200 text-gray-700 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all cursor-pointer">
             Lihat Cara Kerja
-          </button>
+          </a>
         </div>
       </div>
 
