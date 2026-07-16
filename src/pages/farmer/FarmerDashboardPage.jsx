@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AnimalList from '../../components/AnimalList'
 import CaseStatus from '../../components/CaseStatus'
 import DashboardShell from '../../components/DashboardShell'
+import FarmerAcademyPage from './FarmerAcademyPage'
 
 function DashboardHome({ setActiveTab }) {
   return (
@@ -65,12 +66,7 @@ export default function FarmerDashboardPage() {
       />
     ),
     konsultasi: <CaseStatus />,
-    akademi: (
-      <PlaceholderPanel
-        description="Materi edukasi peternakan dan kesehatan hewan akan tersedia untuk membantu perawatan harian."
-        title="Akademi Ternak"
-      />
-    ),
+    akademi: <FarmerAcademyPage />,
   }
 
   return (
