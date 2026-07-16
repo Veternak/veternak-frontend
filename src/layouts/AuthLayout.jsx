@@ -13,6 +13,7 @@ export default function AuthLayout({
   variant = 'login',
 }) {
   const isRegister = variant === 'register'
+  const isSplitRegister = isRegister && infoPanel
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#EFF8E3] text-main-text">
@@ -27,22 +28,25 @@ export default function AuthLayout({
 
       <div className={[
         'relative z-10 mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 pb-14 pt-28 md:pt-32',
-        isRegister ? 'md:grid-cols-[1fr_488px]' : 'place-items-center',
+        isSplitRegister ? 'md:grid-cols-[1fr_488px]' : 'place-items-center',
       ].join(' ')}>
-        {isRegister && infoPanel ? <div className="hidden md:block">{infoPanel}</div> : null}
+        {isSplitRegister ? <div className="hidden md:block">{infoPanel}</div> : null}
 
-        <div className={isRegister ? 'w-full max-w-[488px]' : 'w-full max-w-[520px]'}>
+        <div className={isSplitRegister ? 'w-full max-w-[488px]' : isRegister ? 'w-full max-w-[680px]' : 'w-full max-w-[520px]'}>
           <AuthCard>
             {eyebrow ? (
-              <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-brand-green">{eyebrow}</p>
+              <p className={[
+                'text-sm font-extrabold uppercase tracking-[0.16em] text-brand-green',
+                isSplitRegister ? '' : 'text-center',
+              ].join(' ')}>{eyebrow}</p>
             ) : null}
             <h1 className={isRegister
-              ? 'mt-2 text-2xl font-extrabold leading-tight tracking-tight text-primary-dark'
+              ? ['mt-2 text-2xl font-extrabold leading-tight tracking-tight text-primary-dark', isSplitRegister ? '' : 'text-center'].join(' ')
               : 'mt-2 text-center font-serif text-4xl font-bold leading-tight text-brand-green'}>
               {title}
             </h1>
             <p className={isRegister
-              ? 'mt-2 text-sm leading-6 text-gray-600'
+              ? ['mt-2 text-sm leading-6 text-gray-600', isSplitRegister ? '' : 'mx-auto max-w-md text-center'].join(' ')
               : 'mx-auto mt-3 max-w-[320px] text-center text-sm leading-6 text-gray-600'}>
               {subtitle}
             </p>
