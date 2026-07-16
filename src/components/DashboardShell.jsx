@@ -9,7 +9,8 @@ const Icon = ({ name }) => {
     book: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
     chat: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
     user: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-    plus: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    plus: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+    store: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 1.5-5h15L21 9"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/><path d="M3 9h18"/><path d="M7 9v2a2 2 0 0 0 4 0V9"/><path d="M13 9v2a2 2 0 0 0 4 0V9"/></svg>
   };
   return icons[name] || null;
 };
@@ -24,6 +25,8 @@ export default function DashboardShell() {
     { id: "lapor", label: "Lapor", icon: "plus", isCta: true, path: "/peternak/lapor" },
     { id: "konsultasi", label: "Konsultasi", icon: "chat", path: "/peternak/konsultasi" },
     { id: "akademi", label: "Akademi", icon: "book", path: "/peternak/akademi" },
+    { id: "marketplace", label: "Toko", icon: "store", path: "/peternak/marketplace" },
+    { id: "profil", label: "Profil", icon: "user", path: "/peternak/profil", desktopOnly: true },
   ];
   
   return (
@@ -45,7 +48,7 @@ export default function DashboardShell() {
               key={item.id}
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl font-bold transition-all cursor-pointer ${
-                location.pathname === item.path 
+                location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
                 ? "bg-brand-soft text-brand-green" 
                 : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
               }`}
@@ -58,13 +61,17 @@ export default function DashboardShell() {
 
         {/* Profile & Logout Area */}
         <div className="p-8 border-t border-gray-50 flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/peternak/profil")}
+            className="flex items-center gap-3 rounded-2xl p-2 text-left transition-colors hover:bg-brand-soft"
+          >
               <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">M</div>
               <div>
                 <p className="text-xs font-bold text-primary-dark">Masrukhi</p>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Peternak Sapi</p>
               </div>
-          </div>
+          </button>
           <button 
             onClick={() => window.location.href = "/"} 
             className="text-left text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors uppercase tracking-widest cursor-pointer"
@@ -79,7 +86,13 @@ export default function DashboardShell() {
         {/* Mobile Header */}
         <div className="md:hidden flex justify-between items-center mb-6 pt-4 px-2">
           <img src={logo} alt="Veternak Logo" className="h-10 w-auto object-contain" />
-          <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">M</div>
+          <button
+            type="button"
+            onClick={() => navigate("/peternak/profil")}
+            className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold"
+          >
+            M
+          </button>
         </div>
         
         {/* THIS IS WHERE THE SUB-PAGES APPEAR */}
@@ -88,7 +101,7 @@ export default function DashboardShell() {
 
       {/* --- MOBILE BOTTOM NAV --- */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-2 py-3 flex justify-around items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {menuItems.map((item) => (
+        {menuItems.filter((item) => !item.desktopOnly).map((item) => (
           <button
             key={item.id}
             onClick={() => navigate(item.path)}
@@ -101,9 +114,9 @@ export default function DashboardShell() {
                 <Icon name={item.icon} />
               </div>
             ) : (
-              <div className={`transition-colors ${location.pathname === item.path ? "text-brand-green" : "text-gray-300"}`}>
+              <div className={`transition-colors ${location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) ? "text-brand-green" : "text-gray-300"}`}>
                 <div className="flex justify-center"><Icon name={item.icon} /></div>
-                <span className="text-[10px] font-bold block mt-0.5">{item.label}</span>
+                <span className="text-[9px] font-bold block mt-0.5">{item.label}</span>
               </div>
             )}
           </button>

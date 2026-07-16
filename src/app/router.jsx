@@ -18,6 +18,8 @@ import AddAnimalPage from '../pages/farmer/AddAnimalPage'
 import AnimalProfilePage from '../pages/farmer/AnimalProfilePage'
 import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
 import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
+import FarmerMarketplacePage from '../pages/farmer/FarmerMarketplacePage'
+import FarmerProfilePage from '../pages/farmer/FarmerProfilePage'
 import VetProfilePage from '../pages/farmer/VetProfilePage'
 import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
@@ -146,6 +148,14 @@ export const router = createBrowserRouter([
       {
         path: 'akademi',
         element: <FarmerAcademyPage />,
+      },
+      {
+        path: 'marketplace',
+        element: <FarmerMarketplacePage />,
+      },
+      {
+        path: 'profil',
+        element: <FarmerProfilePage />,
       },
     ],
   },
