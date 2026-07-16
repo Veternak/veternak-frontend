@@ -22,6 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Hackathon Docs & Private Notes
 TODO.md
 Veternak_Design_Guide_v1.0.md
 Veternak_PRD_Combined_for_StitchAI.md
