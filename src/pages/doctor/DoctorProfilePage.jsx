@@ -8,12 +8,8 @@ function maskStr(value) {
   return `${value.slice(0, 8)}••••${value.slice(-3)}`
 }
 
-function displayValue(value) {
-  return value || 'Belum diisi';
-}
-
 export default function DoctorProfilePage() {
-  const [doctor, setDoctor] = useState(() => getStoredDoctor() || {});
+  const [doctor, setDoctor] = useState(() => getStoredDoctor() || {})
   const [form, setForm] = useState({
     experienceYears: doctor.experienceYears ?? 5,
     chatPrice: doctor.chatPrice ?? 15000,
@@ -24,7 +20,7 @@ export default function DoctorProfilePage() {
     district: doctor.district || '',
     addressDetail: doctor.addressDetail || '',
   })
-  
+
   const [saved, setSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -45,13 +41,13 @@ export default function DoctorProfilePage() {
         regency: form.regency.trim() || null,
         district: form.district.trim() || null,
         addressDetail: form.addressDetail.trim() || null,
-      });
+      })
 
-      const updated = response?.data?.vet || response?.vet || response;
-      setDoctor(updated);
-      setSaved(true);
+      const updated = response?.data?.vet || response?.vet || response
+      setDoctor(updated)
+      setSaved(true)
     } catch (err) {
-      setError(err?.message || 'Gagal menyimpan perubahan profil.');
+      setError(err?.message || 'Gagal menyimpan perubahan profil.')
     } finally {
       setIsSaving(false)
     }
@@ -63,11 +59,11 @@ export default function DoctorProfilePage() {
     roleLabel: 'Dokter Hewan',
     strNumber: doctor.strNumber || 'STR-2026-001',
     verificationStatus: doctor.isVerified ? 'VERIFIED' : 'PENDING_VERIFICATION',
-  };
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
-      <header className="rounded-[32px] border border-[#E7EFE4] bg-gradient-to-br from-white to-[#F8FCEF] p-6 shadow-[0_18px_48px_rgba(19,59,38,0.10),0_2px_8px_rgba(19,59,38,0.04)] md:p-8">
+      <header className="rounded-4xl border border-[#E7EFE4] bg-linear-to-br from-white to-[#F8FCEF] p-6 shadow-[0_18px_48px_rgba(19,59,38,0.10),0_2px_8px_rgba(19,59,38,0.04)] md:p-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex flex-wrap gap-2">
@@ -79,6 +75,7 @@ export default function DoctorProfilePage() {
             <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-primary-dark">{doctorInfo.name}</h1>
             <p className="mt-2 text-gray-600">{doctorInfo.roleLabel}</p>
           </div>
+
           <div className="rounded-2xl border border-[#E7EFE4] bg-white p-4 text-sm shadow-[0_10px_24px_rgba(19,59,38,0.06)]">
             <p className="font-bold text-primary-dark">Slot Konsultasi</p>
             <p className="mt-1 text-brand-green">Aktif & Menerima Kasus</p>
@@ -123,7 +120,7 @@ export default function DoctorProfilePage() {
         <form className="rounded-[28px] border border-[#E7EFE4] bg-white p-6 shadow-[0_18px_48px_rgba(19,59,38,0.10),0_2px_8px_rgba(19,59,38,0.04)]" onSubmit={handleSave}>
           <h2 className="text-xl font-bold text-primary-dark">Edit profil</h2>
           <p className="mt-1 text-sm text-gray-600">Perbarui layanan, area praktik, jadwal, dan status ketersediaan dokter.</p>
-          
+
           <div className="mt-5 grid gap-4 text-sm md:grid-cols-2">
             <label className="block">
               <span className="font-bold text-primary-dark">Pengalaman (Tahun)</span>

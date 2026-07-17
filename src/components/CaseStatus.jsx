@@ -22,6 +22,25 @@ function CheckIcon() {
   );
 }
 
+function ProfileAvatarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9 text-brand-green" aria-hidden="true">
+      <path
+        d="M12 12.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M4.5 19.5c1.7-3.2 4.4-4.8 7.5-4.8s5.8 1.6 7.5 4.8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
 export default function CaseStatus() {
   const [selectedFilter, setSelectedFilter] = useState(filters[0]);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -62,7 +81,28 @@ export default function CaseStatus() {
 
         if (!isMounted) return;
 
-        const fetchedVets = vetResponse?.data?.vets || [];
+        let fetchedVets = vetResponse?.data?.vets || [];
+
+        // Fallback: if geolocation search returns no doctors, retry without lat/long
+        // This avoids empty lists when doctors were created without coordinates.
+        if (fetchedVets.length === 0 && (params.lat !== undefined || params.long !== undefined)) {
+          const fallbackVetResponse = await getVets({ canVisit: params.canVisit });
+          fetchedVets = fallbackVetResponse?.data?.vets || [];
+        }
+
+        // If geosearch returned very few results, also fetch general list and merge
+        // This helps surface more doctors if many lack coordinates but still exist in DB.
+        if (fetchedVets.length < itemsPerPage) {
+          const generalRes = await getVets({ canVisit: params.canVisit });
+          const generalVets = generalRes?.data?.vets || [];
+          const existingIds = new Set(fetchedVets.map((v) => v.id));
+          generalVets.forEach((v) => {
+            if (!existingIds.has(v.id)) {
+              fetchedVets.push(v);
+            }
+          });
+        }
+
         setVets(fetchedVets);
         if (fetchedVets.length > 0) {
           setSelectedDoctorId(String(fetchedVets[0].id));
@@ -80,7 +120,22 @@ export default function CaseStatus() {
         const activeOnly = fetchedConsultations.filter(
           (c) => c.status === "PENDING" || c.status === "ACTIVE" || c.status === "IN_PROGRESS"
         );
-        setActiveConsultations(activeOnly);
+        
+        // Remove duplicates: keep only latest for each vet
+        const vetMap = new Map();
+        activeOnly.forEach((c) => {
+          const vetId = c.vet?.id;
+          if (vetId) {
+            const existing = vetMap.get(vetId);
+            if (!existing || new Date(c.createdAt) > new Date(existing.createdAt)) {
+              vetMap.set(vetId, c);
+            }
+          }
+        });
+        
+        const uniqueConsultations = Array.from(vetMap.values());
+        setActiveConsultations(uniqueConsultations);
+        setCurrentPage(1);
       } catch (err) {
         if (isMounted) setError(err?.message || "Gagal memuat data konsultasi.");
       } finally {
@@ -345,10 +400,15 @@ export default function CaseStatus() {
                   >
                     <div className="flex gap-3 sm:gap-4">
                       <img
-                        src={doctor.profilePicture || "https://i.pravatar.cc/180?img=47"}
+                        src={doctor.profilePicture || undefined}
                         alt={`Foto ${doctor.name}`}
-                        className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl object-cover"
+                        className={`h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl object-cover ${doctor.profilePicture ? '' : 'hidden'}`}
                       />
+                      {!doctor.profilePicture && (
+                        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl bg-neutral-bg border border-[#E5EAE6] flex items-center justify-center">
+                          <ProfileAvatarIcon />
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -389,10 +449,15 @@ export default function CaseStatus() {
             <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
               <div className="flex items-start gap-4">
                 <img
-                  src={selectedDoctor.profilePicture || "https://i.pravatar.cc/180?img=47"}
+                  src={selectedDoctor.profilePicture || undefined}
                   alt={`Foto ${selectedDoctor.name}`}
-                  className="h-20 w-20 rounded-2xl object-cover"
+                  className={`h-20 w-20 rounded-2xl object-cover ${selectedDoctor.profilePicture ? '' : 'hidden'}`}
                 />
+                {!selectedDoctor.profilePicture && (
+                  <div className="h-20 w-20 rounded-2xl bg-neutral-bg border border-[#E5EAE6] flex items-center justify-center">
+                    <ProfileAvatarIcon />
+                  </div>
+                )}
                 <div>
                   <span className="mb-2 inline-flex rounded-full bg-[#E8F5EC] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1D5937]">
                     {selectedDoctor.isVerified ? "Terverifikasi" : "Mitra Rujukan"}

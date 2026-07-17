@@ -7,6 +7,7 @@ const SOCKET_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/
 export function useChatSocket(consultationId, onMessageReceived) {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [socketError, setSocketError] = useState("");
 
   useEffect(() => {
     if (!consultationId) return;
@@ -21,11 +22,21 @@ export function useChatSocket(consultationId, onMessageReceived) {
 
     socket.on("connect", () => {
       setIsConnected(true);
+      setSocketError("");
       socket.emit("join_room", { consultationId: Number(consultationId) });
     });
 
     socket.on("disconnect", () => {
       setIsConnected(false);
+    });
+
+    socket.on("connect_error", (error) => {
+      setIsConnected(false);
+      setSocketError(error?.message || "Gagal terhubung ke chat real-time");
+    });
+
+    socket.on("error_message", (payload) => {
+      setSocketError(payload?.message || "Terjadi error pada ruang chat");
     });
 
     socket.on("receive_message", (message) => {
@@ -45,8 +56,10 @@ export function useChatSocket(consultationId, onMessageReceived) {
         consultationId: Number(consultationId),
         message: messageText,
       });
+      return true;
     }
+    return false;
   };
 
-  return { isConnected, sendMessage };
+  return { isConnected, sendMessage, socketError };
 }

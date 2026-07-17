@@ -116,6 +116,17 @@ export default function FarmerChatPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  function MessageBody({ text }) {
+    return <p className="mt-1 font-semibold whitespace-pre-wrap">{text}</p>;
+  }
+
+  function getMessageRole(message) {
+    if (message?.senderRole) return String(message.senderRole).toUpperCase();
+    if (message?.vetSenderId) return 'VET';
+    if (message?.farmerSenderId) return 'FARMER';
+    return 'SYSTEM';
+  }
+
   // Handle socket incoming message
   const handleIncomingMessage = useCallback((message) => {
     setMessages((current) => {
@@ -124,13 +135,14 @@ export default function FarmerChatPage() {
     });
   }, []);
 
-  const { isConnected, sendMessage } = useChatSocket(id, handleIncomingMessage);
+  const { isConnected, sendMessage, socketError } = useChatSocket(id, handleIncomingMessage);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!draft.trim()) return;
 
-    sendMessage(draft.trim());
+    const sent = sendMessage(draft.trim());
+    if (!sent) return;
     setDraft("");
   };
 
@@ -216,8 +228,9 @@ export default function FarmerChatPage() {
             </p>
           ) : (
             messages.map((message) => {
-              const isFarmer = message.senderRole === "FARMER";
-              const isSystem = message.senderRole === "SYSTEM";
+              const role = getMessageRole(message);
+              const isFarmer = role === "FARMER";
+              const isSystem = role === "SYSTEM";
 
               return (
                 <div
@@ -234,7 +247,7 @@ export default function FarmerChatPage() {
                       {isFarmer ? "Anda" : vet.name}
                     </p>
                   )}
-                  <p className="font-medium">{message.message || message.body}</p>
+                  <MessageBody text={message.message || message.body} />
                   <p className="mt-1.5 text-[9px] opacity-70 text-right">
                     {new Date(message.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -244,6 +257,12 @@ export default function FarmerChatPage() {
           )}
           <div ref={chatBottomRef} />
         </div>
+
+        {socketError && (
+          <div className="mt-3 rounded-2xl border border-[#F6CACA] bg-[#FDEBEC] p-3 text-sm font-semibold text-[#912525]">
+            {socketError}
+          </div>
+        )}
 
         {/* Form Input */}
         <form className="mt-5 flex gap-3 items-center" onSubmit={handleSend}>
@@ -255,10 +274,11 @@ export default function FarmerChatPage() {
             placeholder="Ketik pesan Anda disini..."
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            disabled={!isConnected}
           />
           <button
             type="submit"
-            disabled={!draft.trim()}
+            disabled={!isConnected || !draft.trim()}
             className="min-h-[48px] rounded-xl bg-brand-lime px-6 text-sm font-bold text-primary-dark hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-60 disabled:scale-100"
           >
             Kirim

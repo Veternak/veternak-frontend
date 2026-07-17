@@ -96,6 +96,13 @@ function MessageBody({ text }) {
   )
 }
 
+function getMessageRole(message) {
+  if (message.senderRole) return String(message.senderRole).toUpperCase()
+  if (message.vetSenderId) return 'VET'
+  if (message.farmerSenderId) return 'FARMER'
+  return 'SYSTEM'
+}
+
 export default function DoctorConsultationPage() {
   const { id } = useParams()
   const isDemo = id === 'demo'
@@ -158,7 +165,7 @@ export default function DoctorConsultationPage() {
   }, [])
 
   // Connect socket.io
-  const { isConnected, sendMessage } = useChatSocket(isDemo ? null : id, handleIncomingMessage)
+  const { isConnected, sendMessage, socketError } = useChatSocket(isDemo ? null : id, handleIncomingMessage)
 
   const appendDemoMessage = (text) => {
     setMessages((current) => [
@@ -179,7 +186,8 @@ export default function DoctorConsultationPage() {
     if (isDemo) {
       appendDemoMessage(draft.trim())
     } else {
-      sendMessage(draft.trim())
+      const sent = sendMessage(draft.trim())
+      if (!sent) return
     }
     setDraft('')
   }
@@ -255,8 +263,9 @@ export default function DoctorConsultationPage() {
             <p className="text-center text-xs font-semibold text-gray-400 py-10">Belum ada percakapan. Tulis pesan pertama Anda di bawah.</p>
           ) : (
             messages.map((message) => {
-              const isDoctor = message.senderRole === 'VET' || message.senderRole === 'VETERINARIAN'
-              const isSystem = message.senderRole === 'SYSTEM'
+              const role = getMessageRole(message)
+              const isDoctor = role === 'VET' || role === 'VETERINARIAN'
+              const isSystem = role === 'SYSTEM'
 
               return (
                 <div
@@ -281,6 +290,12 @@ export default function DoctorConsultationPage() {
           )}
           <div ref={chatBottomRef} />
         </div>
+
+        {!isDemo && socketError && (
+          <div className="mt-3 rounded-2xl border border-[#F6CACA] bg-[#FDEBEC] p-3 text-sm font-semibold text-[#912525]">
+            {socketError}
+          </div>
+        )}
 
         <form className="mt-5 flex flex-col gap-3 md:flex-row animate-slide-up" onSubmit={handleSend}>
           <label className="sr-only" htmlFor="chat-draft">Tulis pesan</label>
