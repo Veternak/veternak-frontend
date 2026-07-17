@@ -148,6 +148,11 @@ export async function createMedicalRecord(consultationId, payload) {
   })
 }
 
+export async function getChatHistory(consultationId) {
+  return apiRequest(`/consultations/${consultationId}/messages`, { method: 'GET' })
+}
+
+
 
 
 

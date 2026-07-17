@@ -94,8 +94,9 @@ export default function DoctorShell() {
 
   return (
     <div className="min-h-screen bg-[#F3F8F1] text-main-text">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[280px] border-r border-[#E1EBDD] bg-white/92 px-5 py-6 shadow-[20px_0_60px_rgba(19,59,38,0.08)] backdrop-blur-xl lg:flex lg:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[280px] border-r border-[#E1EBDD] bg-white/92 px-5 py-6 shadow-[20px_0_60px_rgba(19,59,38,0.08)] backdrop-blur-xl lg:flex lg:flex-col overflow-y-auto">
         <Link
+
           aria-label="Kembali ke dashboard dokter"
           className="inline-flex w-fit rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-green/20"
           to="/dokter-app/dashboard"

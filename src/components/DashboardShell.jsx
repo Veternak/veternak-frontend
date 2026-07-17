@@ -51,8 +51,9 @@ export default function DashboardShell() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#F8FAF8] md:flex">
-      <aside className="fixed hidden h-full w-64 flex-col border-r border-gray-100 bg-white md:flex">
+      <aside className="fixed hidden h-full w-64 flex-col border-r border-gray-100 bg-white md:flex overflow-y-auto">
         <div className="p-8 pb-4">
+
           <img src={logo} alt="Veternak Logo" className="h-16 w-auto -ml-2 cursor-pointer object-contain" onClick={() => navigate('/')} />
         </div>
         <nav className="flex-grow space-y-2 px-4">

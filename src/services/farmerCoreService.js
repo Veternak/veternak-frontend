@@ -60,5 +60,10 @@ export async function getFarmerDashboard() {
   return apiRequest('/farmer/dashboard', { method: 'GET' })
 }
 
+export async function getChatHistory(consultationId) {
+  return apiRequest(`/consultations/${consultationId}/messages`, { method: 'GET' })
+}
+
+
 
 
