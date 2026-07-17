@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import logoFull from '../../assets/logo-full.png'
-import { doctorDemoCases, doctorDemoNotifications } from '../../data/doctorDemoData'
-import { clearDoctorSession, getStoredDoctor, getDoctorDisplayName } from '../../services/doctorAuthService'
+import logoFull from '../assets/logo-full.png'
+import { doctorDemoCases, doctorDemoNotifications } from '../data/doctorDemoData'
+import { clearDoctorSession, getStoredDoctor, getDoctorDisplayName } from '../services/doctorAuthService'
 
 const navItems = [
   { icon: 'grid', label: 'Dashboard', to: '/dokter-app/dashboard' },

@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
-import DoctorShell from '../components/doctor/DoctorShell'
+import DoctorShell from '../layouts/DoctorShell'
 import DoctorLoginPage from '../pages/doctor-auth/DoctorLoginPage'
 import DoctorRegisterPage from '../pages/doctor-auth/DoctorRegisterPage'
 import DoctorVerificationPendingPage from '../pages/doctor-auth/DoctorVerificationPendingPage'
@@ -14,7 +14,6 @@ import DoctorHistoryPage from '../pages/doctor/DoctorHistoryPage'
 import DoctorNotificationsPage from '../pages/doctor/DoctorNotificationsPage'
 import DoctorProfilePage from '../pages/doctor/DoctorProfilePage'
 import DoctorVisitsPage from '../pages/doctor/DoctorVisitsPage'
-import AddAnimalPage from '../pages/farmer/AddAnimalPage'
 import AnimalProfilePage from '../pages/farmer/AnimalProfilePage'
 import FarmerAcademyPage from '../pages/farmer/FarmerAcademyPage'
 import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
@@ -25,10 +24,9 @@ import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
 // Your UI Components
-import AnimalList from '../components/AnimalList'
 import CaseStatus from '../components/CaseStatus'
 import ScreeningForm from '../components/ScreeningForm'
-import DashboardShell from '../components/DashboardShell' // Import the shell we made!
+import DashboardShell from '../layouts/DashboardShell' // Import the shell we made!
 
 export const router = createBrowserRouter([
   {

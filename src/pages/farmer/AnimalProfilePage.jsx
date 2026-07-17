@@ -142,7 +142,7 @@ export default function AnimalProfilePage() {
   if (error && !animal) {
     return (
       <section className="mx-auto max-w-3xl rounded-[2rem] border border-[#E5EAE6] bg-white p-8 shadow-sm">
-        <Link to="/peternak/ternak" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-brand-green">
+        <Link to="/peternak" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-brand-green">
           <ArrowLeftIcon />
           Kembali ke daftar ternak
         </Link>
