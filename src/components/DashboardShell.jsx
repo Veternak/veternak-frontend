@@ -15,13 +15,13 @@ const icons = {
 
 const menuItems = [
   { id: 'dashboard', label: 'Beranda', icon: 'home', path: '/peternak/dashboard' },
-  { id: 'ternak', label: 'Ternak', icon: 'list', path: '/peternak/ternak' },
   { id: 'lapor', label: 'Lapor', icon: 'plus', isCta: true, path: '/peternak/lapor' },
   { id: 'konsultasi', label: 'Konsultasi', icon: 'chat', path: '/peternak/konsultasi' },
   { id: 'marketplace', label: 'Toko', icon: 'store', path: '/peternak/marketplace' },
   { id: 'akademi', label: 'Akademi', icon: 'book', path: '/peternak/akademi', desktopOnly: true },
   { id: 'profil', label: 'Profil', icon: 'user', path: '/peternak/profil', desktopOnly: true },
 ];
+
 
 function isActive(pathname, path) {
   return pathname === path || pathname.startsWith(`${path}/`);

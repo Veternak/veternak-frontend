@@ -118,17 +118,10 @@ export const router = createBrowserRouter([
         element: <FarmerHomeRoute />,
       },
       {
-        path: 'ternak',
-        element: <AnimalList />,
-      },
-      {
-        path: 'ternak/tambah',
-        element: <AddAnimalPage />,
-      },
-      {
         path: 'ternak/:animalId',
         element: <AnimalProfilePage />,
       },
+
       {
         path: 'konsultasi',
         element: <CaseStatus />,
