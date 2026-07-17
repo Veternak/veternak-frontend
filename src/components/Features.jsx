@@ -14,9 +14,9 @@ const smartFeatures = [
   },
   {
     className: 'bg-[#FBF9EE] text-primary-dark border-[#EFE9D5]',
-    desc: 'Materi edukasi ringkas untuk membantu peternak memahami perawatan harian.',
+    desc: 'Belanja pakan, alat, aksesori, dan produk pendukung kesehatan.',
     icon: <path d="M4 19.5V6a2 2 0 0 1 2-2h14v15H6a2 2 0 0 0-2 2.5" />,
-    title: 'Veternak Academy',
+    title: 'Kebutuhan Kandang dan Perawatan',
     image: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&q=80&w=500',
     fadeColor: '#FBF9EE'
   },
