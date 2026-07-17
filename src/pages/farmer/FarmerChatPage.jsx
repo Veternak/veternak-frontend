@@ -189,10 +189,12 @@ export default function FarmerChatPage() {
               <span className="font-bold text-brand-green mt-1 block">Aktif (Sudah Dibayar)</span>
             </div>
             <div className="p-3 bg-neutral-bg rounded-xl">
-              <span className="text-xs text-[#8D978F] font-bold block">Hasil Diagnosis Awal AI</span>
-              <p className="text-xs leading-relaxed text-[#505B53] mt-1.5 font-medium whitespace-pre-wrap">
-                {consultation.aiDiagnosisSummary || "Tidak ada detail diagnosis awal."}
-              </p>
+              <span className="text-xs text-[#8D978F] font-bold block mb-1.5">Hasil Diagnosis Awal AI</span>
+              <div className="max-h-[220px] overflow-y-auto pr-1">
+                <p className="text-xs leading-relaxed text-[#505B53] font-medium whitespace-pre-wrap">
+                  {consultation.aiDiagnosisSummary || "Tidak ada detail diagnosis awal."}
+                </p>
+              </div>
             </div>
           </div>
         </div>

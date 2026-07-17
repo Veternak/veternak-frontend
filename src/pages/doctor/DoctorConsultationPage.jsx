@@ -168,9 +168,11 @@ export default function DoctorConsultationPage() {
 
       <aside className="space-y-6">
         <DoctorSectionCard title="Panel kasus">
-          <pre className="text-sm leading-6 text-gray-600 bg-neutral-bg p-3 rounded-xl whitespace-pre-wrap font-mono">
-            {caseDetail.aiDiagnosisSummary || 'Tidak ada detail.'}
-          </pre>
+          <div className="max-h-[220px] overflow-y-auto pr-1 bg-neutral-bg p-3 rounded-xl border border-gray-100/50">
+            <pre className="text-xs leading-relaxed text-gray-600 whitespace-pre-wrap font-sans font-semibold">
+              {caseDetail.aiDiagnosisSummary || 'Tidak ada detail.'}
+            </pre>
+          </div>
           <dl className="mt-4 grid gap-3 text-sm">
             <div className="rounded-xl bg-neutral-bg px-4 py-3">
               <dt className="font-bold text-gray-500">Peternak</dt>
