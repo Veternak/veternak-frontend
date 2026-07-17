@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Button from '../ui/Button'
 import FormError from '../ui/FormError'
+import { createMedicalRecord } from '../../services/doctorAuthService'
 
 const initialValues = {
   finalDiagnosis: '',
@@ -49,6 +50,8 @@ export default function ClinicalRecordForm({ caseId }) {
   const [values, setValues] = useState(initialValues)
   const [errors, setErrors] = useState({})
   const [isSaved, setIsSaved] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -57,7 +60,7 @@ export default function ClinicalRecordForm({ caseId }) {
     if (isSaved) setIsSaved(false)
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const nextErrors = {}
 
@@ -67,7 +70,29 @@ export default function ClinicalRecordForm({ caseId }) {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    setIsSaved(true)
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    try {
+      const notesCombined = [
+        values.recommendation.trim(),
+        values.followUp.trim() ? `Follow-up: ${values.followUp.trim()}` : "",
+        values.internalNote.trim() ? `Catatan Internal: ${values.internalNote.trim()}` : ""
+      ].filter(Boolean).join("\n\n");
+
+      await createMedicalRecord(Number(caseId), {
+        diagnosis: values.finalDiagnosis.trim(),
+        prescription: values.prescription.trim() || null,
+        notes: notesCombined || null,
+      });
+
+      setIsSaved(true)
+      alert('Rekam medis klinis berhasil disimpan dan kasus dinyatakan selesai!')
+    } catch (err) {
+      setSubmitError(err?.message || 'Gagal menyimpan rekam medis.');
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -75,9 +100,15 @@ export default function ClinicalRecordForm({ caseId }) {
       <div className="rounded-2xl border border-[#D8EDAC] bg-[#F8FCEF] p-4 text-sm leading-6 text-primary-dark">
         <p className="font-bold">Catatan dokter berwenang</p>
         <p className="mt-1">
-          Hasil profesional hanya diisi oleh dokter. Kasus {caseId} ini akan tercatat sebagai rekam kasus saat tersimpan ke sistem utama.
+          Hasil profesional hanya diisi oleh dokter. Kasus #{caseId} ini akan tercatat sebagai rekam kasus saat tersimpan ke sistem utama.
         </p>
       </div>
+
+      {submitError && (
+        <p className="rounded-2xl bg-[#FDEBEC] p-4 text-sm font-semibold text-[#912525]">
+          {submitError}
+        </p>
+      )}
 
       <div className="grid gap-5">
         {fields.map((field) => (
@@ -95,6 +126,7 @@ export default function ClinicalRecordForm({ caseId }) {
               onChange={handleChange}
               placeholder={field.placeholder}
               value={values[field.name]}
+              disabled={isSaved || isSubmitting}
             />
             <p className="mt-2 text-xs leading-5 text-gray-500">{field.helper}</p>
             <FormError>{errors[field.name]}</FormError>
@@ -104,11 +136,15 @@ export default function ClinicalRecordForm({ caseId }) {
 
       {isSaved ? (
         <p className="rounded-2xl bg-[#E8F5EC] p-4 text-sm font-bold text-[#1D5937]">
-          Hasil profesional tersimpan. Status kasus siap ditandai selesai.
+          Hasil profesional telah berhasil tersimpan ke database. Status kasus ditutup (COMPLETED).
         </p>
       ) : null}
 
-      <Button type="submit">Simpan Hasil Profesional</Button>
+      {!isSaved && (
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Menyimpan...' : 'Simpan Hasil Profesional'}
+        </Button>
+      )}
     </form>
   )
 }
