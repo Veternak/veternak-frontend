@@ -22,6 +22,7 @@ export default function AnimalList() {
 
   const getStatusColor = () => "bg-green-100 text-green-700";
   const getSpeciesIcon = (species) => String(species || "").toLowerCase().includes("kambing") ? "K" : "S";
+  const getAnimalCode = (animal) => animal?.id ? `TRN-${String(animal.id).slice(0, 8).toUpperCase()}` : "Kode otomatis";
 
   return (
     <div className="p-6 md:p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
@@ -83,7 +84,7 @@ export default function AnimalList() {
               <p className="text-xs text-gray-500 mb-4">{animal.species} - {animal.age || "Umur belum diisi"}</p>
 
               <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-[10px] text-gray-400">ID: {animal.id}</span>
+                <span className="text-[10px] text-gray-400">{getAnimalCode(animal)}</span>
                 <span className="text-brand-green text-xs font-bold">Lihat Detail</span>
               </div>
             </button>

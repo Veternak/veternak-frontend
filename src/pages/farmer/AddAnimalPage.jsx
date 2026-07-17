@@ -24,7 +24,6 @@ export default function AddAnimalPage() {
     ageValue: "",
     ageUnit: "bulan",
     gender: "MALE",
-    code: "",
     stall: "",
     notes: "",
   });
@@ -41,8 +40,8 @@ export default function AddAnimalPage() {
     event.preventDefault();
     const nextErrors = {};
 
-    if (!form.name.trim() && !form.code.trim()) {
-      nextErrors.name = "Isi nama atau kode ternak.";
+    if (!form.name.trim()) {
+      nextErrors.name = "Isi nama ternak.";
     }
     if (!form.ageValue || Number(form.ageValue) <= 0) {
       nextErrors.ageValue = "Isi umur estimasi ternak.";
@@ -58,7 +57,7 @@ export default function AddAnimalPage() {
     if (Object.keys(nextErrors).length > 0) return;
 
     const payload = {
-      name: (form.name.trim() || form.code.trim()),
+      name: form.name.trim(),
       species: form.species,
       age: `${form.ageValue} ${form.ageUnit}`,
       gender: form.gender,
@@ -67,7 +66,8 @@ export default function AddAnimalPage() {
     setIsSubmitting(true);
     setSubmitError("");
     try {
-      const animal = await createAnimal(payload);
+      const response = await createAnimal(payload);
+      const animal = response?.data?.animal || response;
       navigate(`/peternak/ternak/${animal.id}`);
     } catch (err) {
       setSubmitError(err?.message || "Gagal menyimpan data ternak.");
@@ -103,18 +103,6 @@ export default function AddAnimalPage() {
                 className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
               />
               {errors.name && <p className="mt-2 text-sm font-semibold text-[#912525]">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalCode">Kode ternak</label>
-              <input
-                id="animalCode"
-                type="text"
-                value={form.code}
-                onChange={(event) => updateField("code", event.target.value)}
-                placeholder="Contoh: Spi-006"
-                className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-              />
             </div>
 
             <div>
@@ -235,7 +223,7 @@ export default function AddAnimalPage() {
           )}
 
           <p className="mt-5 text-xs leading-relaxed text-[#8D978F]">
-            Waktu pembuatan dan pembaruan dibuat otomatis oleh backend.
+            Kode ternak, waktu pembuatan, dan waktu pembaruan dibuat otomatis oleh backend.
           </p>
         </aside>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { buildDiagnosisPayload, diagnoseAnimal } from "../services/aiDiagnosisService";
-import { createAnimal, createConsultation, getVets } from "../services/farmerCoreService";
+import { createAnimal, createConsultation, getAnimalById, getVets } from "../services/farmerCoreService";
 
 const animals = [
   {
@@ -53,6 +54,30 @@ const symptomQuestions = [
 ];
 
 const answerOptions = ["Tidak", "Mungkin", "Ya"];
+
+function normalizeAnimal(data) {
+  return data?.data?.animal || data?.animal || data;
+}
+
+function speciesToModelValue(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized.includes("kerbau")) return "kerbau";
+  if (normalized.includes("kambing")) return "kambing";
+  if (normalized.includes("domba")) return "domba";
+  return "sapi";
+}
+
+function getAgeInMonths(value) {
+  const text = String(value || "").toLowerCase();
+  const number = Number.parseInt(text, 10);
+  if (!Number.isFinite(number)) return 0;
+  return text.includes("tahun") ? number * 12 : number;
+}
+
+function getAnimalCode(animal) {
+  if (!animal?.id) return "Otomatis";
+  return `TRN-${String(animal.id).slice(0, 8).toUpperCase()}`;
+}
 
 const fallbackDoctors = [
   {
@@ -112,6 +137,8 @@ function ArrowIcon() {
 }
 
 export default function ScreeningForm() {
+  const [searchParams] = useSearchParams();
+  const animalIdFromQuery = searchParams.get("animalId");
   const [step, setStep] = useState(0);
   const [selectedAnimal, setSelectedAnimal] = useState(animals[0].id);
   const [species, setSpecies] = useState("sapi");
@@ -143,6 +170,8 @@ export default function ScreeningForm() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(null);
   const [diagnosisError, setDiagnosisError] = useState("");
+  const [selectedBackendAnimal, setSelectedBackendAnimal] = useState(null);
+  const [animalLoadError, setAnimalLoadError] = useState("");
   const lastPredictionKeyRef = useRef("");
 
   const doctors = useMemo(() => {
@@ -163,9 +192,32 @@ export default function ScreeningForm() {
   }, [backendVets]);
 
   const animal = useMemo(
-    () => animals.find((item) => item.id === selectedAnimal) ?? animals[0],
-    [selectedAnimal],
+    () => selectedBackendAnimal || animals.find((item) => item.id === selectedAnimal) || animals[0],
+    [selectedAnimal, selectedBackendAnimal],
   );
+
+  useEffect(() => {
+    if (!animalIdFromQuery) return;
+
+    let isMounted = true;
+    setAnimalLoadError("");
+    getAnimalById(animalIdFromQuery)
+      .then((response) => {
+        if (!isMounted) return;
+        const backendAnimal = normalizeAnimal(response);
+        setSelectedBackendAnimal(backendAnimal);
+        setSpecies(speciesToModelValue(backendAnimal?.species));
+        setAnimalAge(getAgeInMonths(backendAnimal?.age));
+        setAnimalCode(backendAnimal?.name || getAnimalCode(backendAnimal));
+      })
+      .catch((error) => {
+        if (isMounted) setAnimalLoadError(error?.message || "Gagal memuat data ternak terpilih.");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [animalIdFromQuery]);
 
   useEffect(() => {
     getVets()
@@ -239,6 +291,8 @@ export default function ScreeningForm() {
   };
 
   const ensureAnimalRecord = async () => {
+    if (selectedBackendAnimal?.id) return selectedBackendAnimal;
+
     const response = await createAnimal({
       name: animalCode || animal.name,
       species,
@@ -246,7 +300,7 @@ export default function ScreeningForm() {
       gender: "FEMALE",
     });
 
-    return response?.data?.animal;
+    return response?.data?.animal || response;
   };
 
   const submitDiagnosis = async () => {
@@ -314,9 +368,20 @@ export default function ScreeningForm() {
           {step === 0 && (
             <div>
               <h2 className="mb-2 text-2xl font-bold text-primary-dark">Lengkapi data awal ternak</h2>
-              <p className="mb-6 text-sm text-[#69736C]">Bagian ini mengikuti input model screening agar data penting tidak terlewat.</p>
-                            <div className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-4 text-sm leading-6 text-[#69736C]">
-                Masukkan data ternak yang ingin dilaporkan. Data ini akan dibuat sebagai profil ternak saat laporan dikirim.
+              <p className="mb-6 text-sm text-[#69736C]">
+                {selectedBackendAnimal
+                  ? "Data ternak sudah diambil dari profil, jadi Anda tinggal melengkapi kondisi dan gejalanya."
+                  : "Bagian ini mengikuti input model screening agar data penting tidak terlewat."}
+              </p>
+              {animalLoadError && (
+                <div className="mb-5 rounded-2xl border border-[#F6CACA] bg-[#FDEBEC] p-4 text-sm font-semibold text-[#912525]">
+                  {animalLoadError}
+                </div>
+              )}
+              <div className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-4 text-sm leading-6 text-[#69736C]">
+                {selectedBackendAnimal
+                  ? `Ternak terpilih: ${selectedBackendAnimal.name} (${getAnimalCode(selectedBackendAnimal)}). Data profil tidak dibuat ulang saat laporan dikirim.`
+                  : "Masukkan data ternak yang ingin dilaporkan. Data ini akan dibuat sebagai profil ternak saat laporan dikirim."}
               </div>
 
               <div className="mt-8 grid gap-5 md:grid-cols-2">
@@ -325,8 +390,9 @@ export default function ScreeningForm() {
                   <select
                     id="species"
                     value={species}
+                    disabled={Boolean(selectedBackendAnimal)}
                     onChange={(event) => setSpecies(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
                   >
                     <option value="sapi">Sapi</option>
                     <option value="kerbau">Kerbau</option>
@@ -341,18 +407,20 @@ export default function ScreeningForm() {
                     type="number"
                     min="0"
                     value={animalAge}
+                    disabled={Boolean(selectedBackendAnimal)}
                     onChange={(event) => setAnimalAge(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
                   />
                 </div>
                 <div>
-                  <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalCode">ID / nama ternak</label>
+                  <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalCode">Nama ternak</label>
                   <input
                     id="animalCode"
                     type="text"
                     value={animalCode}
+                    disabled={Boolean(selectedBackendAnimal)}
                     onChange={(event) => setAnimalCode(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
                   />
                 </div>
                 <div>
@@ -542,6 +610,7 @@ export default function ScreeningForm() {
                   <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan kasus</p>
                   <dl className="grid gap-3 text-sm md:grid-cols-2">
                     <div><dt className="font-bold text-primary-dark">Ternak</dt><dd className="text-[#69736C]">{animal.name} - {animal.species}</dd></div>
+                    <div><dt className="font-bold text-primary-dark">Kode ternak</dt><dd className="text-[#69736C]">{selectedBackendAnimal ? getAnimalCode(selectedBackendAnimal) : "Dibuat otomatis setelah laporan dikirim"}</dd></div>
                     <div><dt className="font-bold text-primary-dark">Input model</dt><dd className="text-[#69736C]">{species}, {animalAge} bulan, {animalStatus}</dd></div>
                     <div><dt className="font-bold text-primary-dark">Mulai terlihat</dt><dd className="text-[#69736C]">{startedAt}</dd></div>
                     <div><dt className="font-bold text-primary-dark">Foto</dt><dd className="text-[#69736C]">{photoCount} foto demo</dd></div>
@@ -643,7 +712,7 @@ export default function ScreeningForm() {
         <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Draft laporan</p>
           <h2 className="text-xl font-bold text-primary-dark">{animal.name}</h2>
-          <p className="mt-1 text-sm text-[#69736C]">{animal.species} | {animal.stall}</p>
+          <p className="mt-1 text-sm text-[#69736C]">{animal.species} | {selectedBackendAnimal ? getAnimalCode(selectedBackendAnimal) : "Kode otomatis"}</p>
           <div className="my-5 h-px bg-[#E5EAE6]" />
           <div className="space-y-4 text-sm">
             <div>

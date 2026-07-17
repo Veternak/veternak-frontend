@@ -35,6 +35,15 @@ function getGenderLabel(value) {
   return genderOptions.find((option) => option.value === value)?.label || value || "-";
 }
 
+function getAnimalCode(animal) {
+  if (!animal?.id) return "-";
+  return `TRN-${String(animal.id).slice(0, 8).toUpperCase()}`;
+}
+
+function normalizeAnimal(data) {
+  return data?.data?.animal || data?.animal || data;
+}
+
 export default function AnimalProfilePage() {
   const { animalId } = useParams();
   const navigate = useNavigate();
@@ -53,7 +62,8 @@ export default function AnimalProfilePage() {
       setIsLoading(true);
       setError("");
       try {
-        const data = await getAnimalById(animalId);
+        const response = await getAnimalById(animalId);
+        const data = normalizeAnimal(response);
         if (!isMounted) return;
         setAnimal(data);
         setForm({
@@ -89,12 +99,13 @@ export default function AnimalProfilePage() {
     setIsSaving(true);
     setError("");
     try {
-      const updated = await updateAnimal(animalId, {
+      const response = await updateAnimal(animalId, {
         name: form.name.trim(),
         species: form.species,
         age: form.age.trim(),
         gender: form.gender,
       });
+      const updated = normalizeAnimal(response);
       setAnimal(updated);
       setIsEditing(false);
     } catch (err) {
@@ -161,7 +172,7 @@ export default function AnimalProfilePage() {
                     Terdaftar
                   </span>
                   <span className="inline-flex rounded-full bg-[#F1F3F5] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#6B7280]">
-                    ID {animal?.id}
+                    {getAnimalCode(animal)}
                   </span>
                 </div>
                 <h1 className="text-3xl font-bold leading-tight text-primary-dark md:text-4xl">{animal?.name}</h1>
@@ -305,7 +316,7 @@ export default function AnimalProfilePage() {
           <div className="mt-5 grid gap-3">
             <button
               type="button"
-              onClick={() => navigate("/peternak/lapor")}
+              onClick={() => navigate(`/peternak/lapor?animalId=${animal?.id}`)}
               className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark"
             >
               Laporkan Kondisi Ternak Ini
