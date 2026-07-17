@@ -123,7 +123,7 @@ export default function AnimalProfilePage() {
     setError("");
     try {
       await deleteAnimal(animalId);
-      navigate("/peternak/ternak");
+      navigate("/peternak/dashboard");
     } catch (err) {
       setError(err?.message || "Gagal menghapus data ternak.");
     } finally {
@@ -154,7 +154,7 @@ export default function AnimalProfilePage() {
 
   return (
     <section className="mx-auto max-w-7xl pb-10">
-      <Link to="/peternak/ternak" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-brand-green">
+      <Link to="/peternak" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-brand-green">
         <ArrowLeftIcon />
         Kembali ke daftar ternak
       </Link>
