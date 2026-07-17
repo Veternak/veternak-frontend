@@ -5,6 +5,7 @@ import FormError from '../../components/ui/FormError'
 import InputField from '../../components/ui/InputField'
 import PasswordInput from '../../components/ui/PasswordInput'
 import AuthLayout from '../../layouts/AuthLayout'
+import { loginFarmer } from '../../services/farmerAuthService'
 
 const initialValues = {
   phone: '',
@@ -56,7 +57,7 @@ export default function LoginPage() {
     }
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validateLogin(values)
@@ -67,16 +68,17 @@ export default function LoginPage() {
     setIsSubmitting(true)
     setFormError('')
 
-    window.setTimeout(() => {
-      if (values.phone.trim().toLowerCase() === 'gagal') {
-        setFormError('Akun demo tidak ditemukan. Periksa kembali nomor telepon.')
-        setIsSubmitting(false)
-        return
-      }
-
-      setIsSubmitting(false)
+    try {
+      await loginFarmer({
+        phone: values.phone.trim(),
+        password: values.password,
+      })
       navigate('/peternak/dashboard')
-    }, 700)
+    } catch (error) {
+      setFormError(error?.message || 'Gagal masuk. Periksa nomor telepon dan password.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -124,7 +126,7 @@ export default function LoginPage() {
             }
             name="password"
             onChange={handleChange}
-            placeholder="••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             value={values.password}
           />
           <div className="mt-3 text-right">
@@ -140,7 +142,7 @@ export default function LoginPage() {
         <FormError>{formError}</FormError>
 
         <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Memeriksa...' : 'Masuk →'}
+          {isSubmitting ? 'Memeriksa...' : 'Masuk â†’'}
         </Button>
       </form>
     </AuthLayout>

@@ -5,6 +5,7 @@ import FormError from '../../components/ui/FormError'
 import InputField from '../../components/ui/InputField'
 import PasswordInput from '../../components/ui/PasswordInput'
 import AuthLayout from '../../layouts/AuthLayout'
+import { registerFarmer } from '../../services/farmerAuthService'
 
 const initialValues = {
   fullName: '',
@@ -101,7 +102,7 @@ export default function RegisterPage() {
     }
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validateRegister(values)
@@ -121,16 +122,20 @@ export default function RegisterPage() {
     setIsSubmitting(true)
     setFormError('')
 
-    window.setTimeout(() => {
-      if (registerPayload.phone === '000000000') {
-        setFormError('Nomor HP demo ini tidak dapat digunakan. Coba nomor lain.')
-        setIsSubmitting(false)
-        return
-      }
-
-      setIsSubmitting(false)
+    try {
+      await registerFarmer({
+        name: registerPayload.name,
+        phone: registerPayload.phone,
+        province: registerPayload.province,
+        regency: registerPayload.regency,
+        password: registerPayload.password,
+      })
       navigate('/masuk')
-    }, 800)
+    } catch (error) {
+      setFormError(error?.message || 'Gagal membuat akun. Coba lagi.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

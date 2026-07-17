@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { buildDiagnosisPayload, diagnoseAnimal } from "../services/aiDiagnosisService";
+import { createAnimal, createConsultation, getVets } from "../services/farmerCoreService";
 
 const animals = [
   {
@@ -52,7 +54,7 @@ const symptomQuestions = [
 
 const answerOptions = ["Tidak", "Mungkin", "Ya"];
 
-const doctors = [
+const fallbackDoctors = [
   {
     name: "drh. Oktavianus K. Rohi",
     expertise: "Ruminansia dan kasus kambing",
@@ -135,12 +137,47 @@ export default function ScreeningForm() {
     ternak_lain_sakit_mirip: "Tidak",
   });
   const [photoCount, setPhotoCount] = useState(1);
-  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0].name);
+  const [backendVets, setBackendVets] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [consultationResult, setConsultationResult] = useState(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState(null);
+  const [diagnosisError, setDiagnosisError] = useState("");
+  const lastPredictionKeyRef = useRef("");
+
+  const doctors = useMemo(() => {
+    if (!backendVets.length) return fallbackDoctors;
+
+    return backendVets.map((vet) => ({
+      id: vet.id,
+      name: vet.name,
+      expertise: `${vet.experienceYears || 0} tahun pengalaman`,
+      area: [vet.district, vet.regency, vet.province].filter(Boolean).join(', ') || 'Area belum diisi',
+      distance: vet.distanceKm ? `${vet.distanceKm} km` : 'Jarak belum tersedia',
+      eta: vet.canVisit ? 'Kunjungan tersedia' : 'Chat tersedia',
+      visit: vet.canVisit ? 'Kunjungan tersedia' : 'Chat dulu',
+      photo: vet.profilePicture || 'https://i.pravatar.cc/160?img=47',
+      reason: vet.isVerified ? 'Dokter terverifikasi di sistem Veternak.' : 'Data dokter dari backend Veternak.',
+      source: 'backend',
+    }));
+  }, [backendVets]);
 
   const animal = useMemo(
     () => animals.find((item) => item.id === selectedAnimal) ?? animals[0],
     [selectedAnimal],
   );
+
+  useEffect(() => {
+    getVets()
+      .then((response) => {
+        const vets = response?.data?.vets || [];
+        setBackendVets(vets);
+        if (vets[0]) setSelectedDoctor(String(vets[0].id));
+      })
+      .catch(() => {
+        setSelectedDoctor(fallbackDoctors[0].name);
+      });
+  }, []);
 
   const progress = ((step + 1) / steps.length) * 100;
 
@@ -151,14 +188,97 @@ export default function ScreeningForm() {
   const canContinue = step !== 1 || story.trim().length > 12;
   const positiveSymptomCount = Object.values(symptomAnswers).filter((value) => value === "Ya").length;
   const possibleSymptomCount = Object.values(symptomAnswers).filter((value) => value === "Mungkin").length;
-  const modelPayload = {
-    jenis_ternak: species,
-    umur_ternak_bulan: Number(animalAge),
-    id_nama_ternak: animalCode,
-    status_ternak: animalStatus,
-    sedang_menghasilkan_susu: isProducingMilk,
-    baru_melahirkan: recentlyGaveBirth,
-    gejala: symptomAnswers,
+  const diagnosisPayload = buildDiagnosisPayload({
+    species,
+    animalAge,
+    isProducingMilk,
+    recentlyGaveBirth,
+    symptomAnswers,
+  });
+  const diagnosisData = diagnosisResult?.data ?? null;
+
+  const requestDiagnosis = async () => {
+    setIsSubmittingReport(true);
+    setDiagnosisError("");
+
+    try {
+      const result = await diagnoseAnimal({
+        species,
+        animalAge,
+        isProducingMilk,
+        recentlyGaveBirth,
+        symptomAnswers,
+      });
+      setDiagnosisResult(result);
+      return result;
+    } catch (error) {
+      setDiagnosisError(
+        error?.status === 401 || error?.status === 403
+          ? "Sesi login belum valid. Masuk sebagai peternak dulu sebelum melihat prediksi."
+          : error?.message || "Gagal memuat prediksi penyakit. Coba lagi."
+      );
+      return null;
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== steps.length - 1) return;
+
+    const predictionKey = JSON.stringify(diagnosisPayload);
+    if (lastPredictionKeyRef.current === predictionKey) return;
+
+    lastPredictionKeyRef.current = predictionKey;
+    requestDiagnosis();
+  }, [step, diagnosisPayload]);
+
+  const normalizeUrgency = (value) => {
+    if (["LOW", "MEDIUM", "HIGH"].includes(value)) return value;
+    return "MEDIUM";
+  };
+
+  const ensureAnimalRecord = async () => {
+    const response = await createAnimal({
+      name: animalCode || animal.name,
+      species,
+      age: `${Number(animalAge) || 0} bulan`,
+      gender: "FEMALE",
+    });
+
+    return response?.data?.animal;
+  };
+
+  const submitDiagnosis = async () => {
+    if (!diagnosisResult) {
+      const result = await requestDiagnosis();
+      if (!result) return;
+    }
+
+    const selectedBackendVet = doctors.find((doctor) => String(doctor.id) === String(selectedDoctor) && doctor.source === "backend");
+    if (!selectedBackendVet) {
+      setDiagnosisError("Pilih dokter dari data backend terlebih dahulu untuk membuat konsultasi.");
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    setDiagnosisError("");
+
+    try {
+      const createdAnimal = await ensureAnimalRecord();
+      const consultation = await createConsultation({
+        vetId: selectedBackendVet.id,
+        animalId: createdAnimal.id,
+        aiDiagnosisSummary: diagnosisResult.data.aiDiagnosisSummary,
+        urgencyLevel: normalizeUrgency(diagnosisResult.data.urgencyLevel),
+      });
+      setConsultationResult(consultation.data);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setDiagnosisError(error?.message || "Gagal membuat konsultasi. Coba lagi.");
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   return (
@@ -405,13 +525,46 @@ export default function ScreeningForm() {
 
               <div className="space-y-5">
                 <section className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-orange-600">Hasil penilaian awal</p>
-                  <h3 className="text-3xl font-bold text-primary-dark">Mendesak</h3>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-orange-600">Prediksi penyakit ternak</p>
+                  <h3 className="text-3xl font-bold text-primary-dark">
+                    {isSubmittingReport ? "Memuat prediksi..." : diagnosisData?.diseaseName || "Belum ada prediksi"}
+                  </h3>
+                  {diagnosisData?.simpleDiseaseName && (
+                    <p className="mt-2 text-base font-bold text-orange-700">{diagnosisData.simpleDiseaseName}</p>
+                  )}
                   <p className="mt-3 text-sm leading-relaxed text-[#505B53]">
-                    Ada tanda lemas, penurunan nafsu makan, dan napas lebih cepat. Hubungi dokter hewan dan pantau bila kondisi memburuk.
+                    {diagnosisData?.description || (isSubmittingReport ? "Backend sedang menghitung prediksi dari gejala yang Anda isi." : "Prediksi belum tersedia. Pastikan sudah login dan backend berjalan.")}
                   </p>
-                  <p className="mt-3 text-xs font-semibold text-orange-700">Sumber keputusan: aturan sistem, bukan diagnosis AI.</p>
+                  {diagnosisData?.urgencyLevel && (
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#505B53]">
+                      <span className="rounded-full bg-white px-3 py-1.5">Urgensi: {diagnosisData.urgencyLevel}</span>
+                      <span className="rounded-full bg-white px-3 py-1.5">Sumber: {diagnosisData.predictionSource}</span>
+                    </div>
+                  )}
+                  <p className="mt-4 text-xs font-semibold text-orange-700">
+                    Hasil ini adalah prediksi awal berdasarkan gejala, bukan diagnosis final dokter hewan.
+                  </p>
                 </section>
+
+                {diagnosisData?.predictions?.length > 0 && (
+                  <section className="rounded-2xl border border-[#E5EAE6] p-5">
+                    <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Kemungkinan penyakit teratas</p>
+                    <div className="grid gap-3">
+                      {diagnosisData.predictions.slice(0, 3).map((item, index) => (
+                        <div key={item.id || item.name} className="rounded-xl bg-[#F8FAF8] p-4">
+                          <div className="flex items-start gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand-green">{index + 1}</span>
+                            <div>
+                              <h4 className="font-bold text-primary-dark">{item.name}</h4>
+                              <p className="mt-1 text-sm leading-6 text-[#69736C]">{item.description}</p>
+                              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-700">Urgensi {item.urgencyLevel}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 <section className="rounded-2xl border border-[#E5EAE6] p-5">
                   <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan kasus</p>
@@ -430,10 +583,23 @@ export default function ScreeningForm() {
                   <details className="mt-4 rounded-xl bg-[#F8FAF8] p-4">
                     <summary className="cursor-pointer text-sm font-bold text-brand-green">Data input yang dikirim ke model</summary>
                     <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs leading-relaxed text-[#505B53]">
-                      {JSON.stringify(modelPayload, null, 2)}
+                      {JSON.stringify(diagnosisPayload, null, 2)}
                     </pre>
                   </details>
                 </section>
+
+                {diagnosisData?.aiDiagnosisSummary && (
+                  <section className="rounded-2xl border border-[#E5EAE6] p-5">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan penilaian awal</p>
+                    <pre className="whitespace-pre-wrap text-sm leading-6 text-[#505B53]">{diagnosisData.aiDiagnosisSummary}</pre>
+                  </section>
+                )}
+
+                {diagnosisError && (
+                  <section className="rounded-2xl border border-[#F6CACA] bg-[#FDEBEC] p-5 text-sm font-semibold text-[#912525]">
+                    {diagnosisError}
+                  </section>
+                )}
 
                 <section className="rounded-2xl border border-[#E5EAE6] p-5">
                   <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Tindakan aman sementara</p>
@@ -450,16 +616,22 @@ export default function ScreeningForm() {
                   </div>
                 </section>
 
+                {consultationResult?.consultation && (
+                  <section className="rounded-2xl border border-[#CFE8D4] bg-[#EEF8F0] p-5 text-sm font-semibold text-[#1D5937]">
+                    Konsultasi berhasil dibuat. ID kasus: #{consultationResult.consultation.id}
+                  </section>
+                )}
+
                 <section>
-                  <h3 className="mb-4 text-xl font-bold text-primary-dark">Pilih dokter hewan demo</h3>
+                  <h3 className="mb-4 text-xl font-bold text-primary-dark">Pilih dokter hewan</h3>
                   <div className="grid gap-4">
                     {doctors.map((doctor) => {
-                      const selected = doctor.name === selectedDoctor;
+                      const selected = String(doctor.id || doctor.name) === String(selectedDoctor);
                       return (
                         <button
                           key={doctor.name}
                           type="button"
-                          onClick={() => setSelectedDoctor(doctor.name)}
+                          onClick={() => setSelectedDoctor(String(doctor.id || doctor.name))}
                           className={`rounded-2xl border p-5 text-left transition-all ${selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"}`}
                         >
                           <div className="flex items-start gap-4">
@@ -471,7 +643,7 @@ export default function ScreeningForm() {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <span className="mb-2 inline-flex rounded-full bg-[#FFF7D6] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">Data Demo</span>
+                                  <span className="mb-2 inline-flex rounded-full bg-[#FFF7D6] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">{doctor.source === "backend" ? "Data Backend" : "Data Demo"}</span>
                                   <h4 className="font-bold text-primary-dark">{doctor.name}</h4>
                                   <p className="mt-1 text-sm text-[#69736C]">{doctor.expertise}</p>
                                 </div>
@@ -534,18 +706,18 @@ export default function ScreeningForm() {
           </button>
           <button
             type="button"
-            disabled={!canContinue}
+            disabled={!canContinue || isSubmittingReport}
             onClick={() => {
               if (step < steps.length - 1) {
                 setStep((current) => current + 1);
                 window.scrollTo({ top: 0, behavior: "smooth" });
                 return;
               }
-              alert("Laporan demo siap dikirim ke dokter.");
+              submitDiagnosis();
             }}
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark disabled:cursor-not-allowed disabled:bg-[#F1F3F2] disabled:text-[#8D978F]"
           >
-            {step === steps.length - 1 ? "Kirim Laporan Demo" : "Lanjutkan"}
+            {step === steps.length - 1 ? (isSubmittingReport ? "Mengirim..." : "Kirim Laporan") : "Lanjutkan"}
             <ArrowIcon />
           </button>
         </div>

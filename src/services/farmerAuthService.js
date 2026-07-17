@@ -1,0 +1,47 @@
+import { apiRequest } from './apiClient'
+
+const TOKEN_KEY = 'veternak_access_token'
+const FARMER_KEY = 'veternak_farmer'
+
+export function storeFarmerSession({ token, farmer }) {
+  if (!token) return
+  window.localStorage.setItem(TOKEN_KEY, token)
+  if (farmer) {
+    window.localStorage.setItem(FARMER_KEY, JSON.stringify(farmer))
+  }
+}
+
+export function clearFarmerSession() {
+  window.localStorage.removeItem(TOKEN_KEY)
+  window.localStorage.removeItem(FARMER_KEY)
+}
+
+export async function loginFarmer(payload) {
+  const response = await apiRequest('/auth/farmer/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone: payload.phone,
+      password: payload.password,
+    }),
+  })
+
+  storeFarmerSession(response.data)
+  return response
+}
+
+export async function registerFarmer(payload) {
+  return apiRequest('/auth/farmer/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone: payload.phone,
+      password: payload.password,
+      name: payload.name,
+      province: payload.province || null,
+      regency: payload.regency || null,
+      district: payload.district || null,
+      addressDetail: payload.addressDetail || null,
+      latitude: payload.latitude ?? null,
+      longitude: payload.longitude ?? null,
+    }),
+  })
+}
