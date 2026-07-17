@@ -34,39 +34,43 @@ export default function FarmerHome({ onLapor }) {
   }, []);
 
   const stats = useMemo(() => [
-    { label: 'Ternak aktif', value: animals.length, tone: 'text-emerald-700 bg-emerald-50' },
-    { label: 'Kasus aktif', value: 0, tone: 'text-amber-700 bg-amber-50' },
-    { label: 'Perlu dokter', value: 0, tone: 'text-rose-700 bg-rose-50' },
+    { label: 'Ternak', value: animals.length, tone: 'text-emerald-700 bg-emerald-50' },
+    { label: 'Kasus', value: 0, tone: 'text-amber-700 bg-amber-50' },
+    { label: 'Dokter', value: 0, tone: 'text-rose-700 bg-rose-50' },
   ], [animals.length]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-10">
-      <section className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    // Added overflow-x-hidden to the main container to stop the whole page from wiggling
+    <div className="mx-auto max-w-6xl space-y-5 pb-24 sm:pb-10 px-4 sm:px-0 overflow-x-hidden">
+      
+      {/* 1. GREETING */}
+      <section className="rounded-3xl border border-[#E5EAE6] bg-white p-5 sm:p-8 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Beranda peternak</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight text-primary-dark md:text-4xl">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Beranda</p>
+            <h1 className="mt-1 text-2xl sm:text-4xl font-bold text-primary-dark">
               Selamat datang, <span className="text-brand-green">{farmerName}</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#69736C]">
+                        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#69736C]">
               Pantau ternak, buat laporan kondisi, dan lanjutkan konsultasi dokter dari satu dashboard.
             </p>
           </div>
           <button
             type="button"
             onClick={onLapor}
-            className="min-h-12 rounded-xl bg-brand-lime px-6 text-sm font-bold text-primary-dark"
+            className="h-12 rounded-xl bg-brand-lime px-6 text-sm font-bold text-primary-dark shadow-md"
           >
             Laporkan Gejala
           </button>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      {/* 2. STATS - Fixed overflow by using w-full */}
+      <section className="grid grid-cols-3 gap-2 sm:gap-4">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8D978F]">{item.label}</p>
-            <p className={`mt-3 inline-flex min-w-14 justify-center rounded-xl px-4 py-2 text-2xl font-black ${item.tone}`}>
+          <div key={item.label} className="rounded-2xl border border-[#E5EAE6] bg-white p-3 sm:p-5 shadow-sm text-center">
+            <p className="text-[9px] sm:text-xs font-bold uppercase text-[#8D978F]">{item.label}</p>
+            <p className={`mt-2 inline-flex w-full justify-center rounded-lg py-1 text-lg sm:text-2xl font-black ${item.tone}`}>
               {item.value}
             </p>
           </div>
@@ -74,72 +78,64 @@ export default function FarmerHome({ onLapor }) {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-primary-dark">Ternak Saya</h2>
-              <p className="mt-1 text-sm text-[#69736C]">Data diambil dari backend sesuai akun yang login.</p>
-            </div>
+        
+        {/* 3. TERNAK SAYA - The Slider Fix */}
+        <div className="rounded-3xl border border-[#E5EAE6] bg-white p-5 sm:p-8 shadow-sm min-w-0">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-primary-dark">Ternak Saya</h2>
             <button
               type="button"
               onClick={() => navigate('/peternak/ternak/tambah')}
-              className="min-h-11 rounded-xl bg-brand-green px-5 text-sm font-bold text-white"
+              className="text-[10px] font-bold text-brand-green bg-brand-soft px-3 py-1.5 rounded-lg"
             >
-              Tambah Ternak
+              + Tambah
             </button>
           </div>
 
-          {isLoading && <p className="rounded-2xl bg-[#F8FAF8] p-5 text-sm font-semibold text-[#69736C]">Memuat data ternak...</p>}
-          {!isLoading && error && <p className="rounded-2xl bg-[#FDEBEC] p-5 text-sm font-semibold text-[#912525]">{error}</p>}
-          {!isLoading && !error && animals.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-[#D4DCD6] bg-[#F8FAF8] p-8 text-center">
-              <h3 className="text-lg font-bold text-primary-dark">Belum ada ternak</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#69736C]">Tambahkan ternak pertama agar bisa dipakai saat membuat laporan kondisi.</p>
-              <button
-                type="button"
-                onClick={() => navigate('/peternak/ternak/tambah')}
-                className="mt-5 rounded-xl bg-brand-lime px-5 py-3 text-sm font-bold text-primary-dark"
-              >
-                Tambah Ternak Pertama
-              </button>
-            </div>
-          )}
-          {!isLoading && !error && animals.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2">
-              {animals.slice(0, 4).map((animal) => (
+          {!isLoading && animals.length > 0 && (
+            <div className="flex sm:grid sm:grid-cols-2 gap-4 overflow-x-auto pb-2 sm:pb-0 snap-x snap-mandatory">
+              {animals.map((animal) => (
                 <button
                   key={animal.id}
                   type="button"
                   onClick={() => navigate(`/peternak/ternak/${animal.id}`)}
-                  className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-5 text-left transition hover:border-brand-green hover:bg-white"
+                  // Added shrink-0 so the card doesn't squish, and reduced width to 220px for mobile
+                  className="min-w-[220px] sm:min-w-0 shrink-0 snap-start rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-4 text-left transition hover:border-brand-green"
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-lg font-bold text-brand-green shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg font-bold text-brand-green shadow-sm border border-gray-100">
                       {getSpeciesIcon(animal.species)}
                     </div>
-                    <span className="rounded-full bg-[#E8F5EC] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1D5937]">Terdaftar</span>
+                    <span className="rounded-full bg-[#E8F5EC] px-2 py-0.5 text-[8px] font-bold uppercase text-[#1D5937]">Aktif</span>
                   </div>
-                  <h3 className="font-bold text-primary-dark">{animal.name}</h3>
-                  <p className="mt-1 text-sm text-[#69736C]">{animal.species} - {animal.age || 'Umur belum diisi'}</p>
-                  <p className="mt-4 border-t border-[#E5EAE6] pt-3 text-xs font-bold text-[#8D978F]">{getAnimalCode(animal)}</p>
+                  <h3 className="font-bold text-sm text-primary-dark truncate">{animal.name}</h3>
+                  <p className="text-[10px] text-[#69736C]">{animal.species}</p>
+                  <p className="mt-4 border-t border-[#E5EAE6]/60 pt-2 text-[9px] font-bold text-[#8D978F]">{getAnimalCode(animal)}</p>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
-          <h2 className="text-xl font-bold text-primary-dark">Aksi cepat</h2>
-          <div className="mt-5 grid gap-3">
-            <button type="button" onClick={onLapor} className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark">Buat Laporan</button>
-            <button type="button" onClick={() => navigate('/peternak/konsultasi')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Konsultasi</button>
-            <button type="button" onClick={() => navigate('/peternak/marketplace')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Toko</button>
+        {/* 4. AKSI CEPAT & CATATAN - Fixed with responsive grid */}
+        <aside className="space-y-4 min-w-0">
+          <div className="rounded-3xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-primary-dark mb-4">Aksi cepat</h2>
+            <div className="grid grid-cols-3 sm:grid-cols-1 gap-2">
+              <button onClick={onLapor} className="h-10 rounded-xl bg-brand-lime text-[10px] sm:text-sm font-bold text-primary-dark">Lapor</button>
+              <button onClick={() => navigate('/peternak/konsultasi')} className="h-10 rounded-xl border border-gray-100 text-[10px] sm:text-sm font-bold text-brand-green">Konsultasi</button>
+              <button onClick={() => navigate('/peternak/marketplace')} className="h-10 rounded-xl border border-gray-100 text-[10px] sm:text-sm font-bold text-brand-green">Toko</button>
+            </div>
           </div>
-          <div className="mt-5 rounded-2xl bg-[#EAF3FB] p-4 text-sm text-[#205580]">
-            <p className="font-bold">Catatan</p>
-            <p className="mt-2 leading-relaxed">Data kasus aktif akan tampil setelah laporan berhasil dibuat dan dokter dipilih.</p>
+          
+          <div className="rounded-3xl bg-[#EAF3FB] p-5 border border-blue-50">
+            <p className="font-bold text-sm text-[#205580]">Catatan</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-[#205580]/70 truncate sm:whitespace-normal">
+              Status kasus aktif akan tampil di sini.
+            </p>
           </div>
         </aside>
+
       </section>
     </div>
   );
