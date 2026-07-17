@@ -3,14 +3,68 @@ import { Link, useParams } from 'react-router-dom'
 import CasePriorityBadge from '../../components/doctor/CasePriorityBadge'
 import DoctorSectionCard from '../../components/doctor/DoctorSectionCard'
 import DoctorStatusBadge from '../../components/doctor/DoctorStatusBadge'
+import { marketplaceProducts } from '../../data/marketplaceProducts'
 import { getConsultationById, getChatHistory } from '../../services/doctorAuthService'
 import { useChatSocket } from '../../services/socket'
+
+const productRecommendationPrefix = '[REKOMENDASI_PRODUK]'
+
+function buildProductRecommendation(product) {
+  return [
+    productRecommendationPrefix,
+    `Nama: ${product.name}`,
+    `Kategori: ${product.category}`,
+    `Harga: ${product.price}`,
+    `Unit: ${product.unit}`,
+    `Catatan: ${product.description}`,
+    'Gunakan sesuai arahan dokter hewan. Ini bukan pengganti pemeriksaan langsung.',
+  ].join('\n')
+}
+
+function parseProductRecommendation(text) {
+  if (!text?.startsWith(productRecommendationPrefix)) return null
+
+  return text
+    .split('\n')
+    .slice(1)
+    .reduce((acc, line) => {
+      const [key, ...value] = line.split(':')
+      if (!key || value.length === 0) return acc
+      acc[key.trim().toLowerCase()] = value.join(':').trim()
+      return acc
+    }, {})
+}
+
+function MessageBody({ text }) {
+  const product = parseProductRecommendation(text)
+
+  if (!product) {
+    return <p className="mt-1 font-semibold whitespace-pre-wrap">{text}</p>
+  }
+
+  return (
+    <div className="mt-2 rounded-2xl border border-white/20 bg-white/95 p-4 text-primary-dark shadow-sm">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-green">Rekomendasi marketplace</p>
+      <h3 className="mt-2 text-base font-bold leading-tight">{product.nama}</h3>
+      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[#505B53]">
+        <span className="rounded-full bg-brand-soft px-3 py-1">{product.kategori}</span>
+        <span className="rounded-full bg-[#F1F3F5] px-3 py-1">{product.harga}</span>
+        <span className="rounded-full bg-[#F1F3F5] px-3 py-1">{product.unit}</span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-[#505B53]">{product.catatan}</p>
+      <p className="mt-3 rounded-xl bg-[#FFF7D6] p-3 text-xs font-semibold leading-5 text-[#725300]">
+        Gunakan sesuai arahan dokter hewan. Ini bukan pengganti pemeriksaan langsung.
+      </p>
+    </div>
+  )
+}
 
 export default function DoctorConsultationPage() {
   const { id } = useParams()
   const [caseDetail, setCaseDetail] = useState(null)
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
+  const [productQuery, setProductQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const chatBottomRef = useRef(null)
@@ -65,6 +119,21 @@ export default function DoctorConsultationPage() {
 
     sendMessage(draft.trim())
     setDraft('')
+  }
+
+  const recommendedProducts = marketplaceProducts.filter((product) => {
+    const query = productQuery.toLowerCase()
+    const searchable = `${product.name} ${product.category} ${product.description}`.toLowerCase()
+    return product.category === 'Obat & vitamin' && searchable.includes(query)
+  })
+
+  const handleSendProduct = (product) => {
+    const message = buildProductRecommendation(product)
+    if (isConnected) {
+      sendMessage(message)
+      return
+    }
+    setDraft(message)
   }
 
   if (isLoading) {
@@ -135,7 +204,7 @@ export default function DoctorConsultationPage() {
                   <p className="font-bold text-xs opacity-75">
                     {isDoctor ? 'Anda' : isSystem ? 'Sistem' : caseDetail.farmer?.name || 'Peternak'}
                   </p>
-                  <p className="mt-1 font-semibold">{message.message || message.body}</p>
+                  <MessageBody text={message.message || message.body} />
                   <p className="mt-2 text-[10px] opacity-70 text-right">
                     {new Date(message.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -187,6 +256,43 @@ export default function DoctorConsultationPage() {
               <dd className="mt-0.5 text-primary-dark font-semibold">Konsultasi Aktif</dd>
             </div>
           </dl>
+        </DoctorSectionCard>
+
+        <DoctorSectionCard title="Rekomendasi obat marketplace">
+          <p className="text-sm leading-6 text-gray-600">
+            Pilih produk kategori obat dan vitamin untuk dikirim sebagai rekomendasi chat. Dosis tetap harus Anda jelaskan sendiri bila diperlukan.
+          </p>
+          <input
+            className="doctor-input mt-4"
+            onChange={(event) => setProductQuery(event.target.value)}
+            placeholder="Cari vitamin, elektrolit..."
+            type="search"
+            value={productQuery}
+          />
+          <div className="mt-4 max-h-[320px] space-y-3 overflow-y-auto pr-1">
+            {recommendedProducts.map((product) => (
+              <article key={product.id} className="rounded-2xl border border-standard-border bg-white p-4 shadow-sm">
+                <div className="flex gap-3">
+                  <img src={product.image} alt={product.name} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold leading-tight text-primary-dark">{product.name}</h3>
+                    <p className="mt-1 text-xs font-semibold text-gray-500">{product.price} / {product.unit}</p>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-gray-600">{product.description}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSendProduct(product)}
+                  className="mt-3 min-h-10 w-full rounded-xl bg-brand-lime px-4 text-xs font-bold text-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isConnected ? 'Kirim ke chat' : 'Masukkan ke draft'}
+                </button>
+              </article>
+            ))}
+          </div>
+          {recommendedProducts.length === 0 && (
+            <p className="mt-4 rounded-xl bg-neutral-bg p-4 text-sm font-semibold text-gray-500">Produk tidak ditemukan.</p>
+          )}
         </DoctorSectionCard>
 
         <div className="grid gap-3">
