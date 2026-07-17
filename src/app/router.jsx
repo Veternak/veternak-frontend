@@ -22,6 +22,7 @@ import FarmerProfilePage from '../pages/farmer/FarmerProfilePage'
 import VetProfilePage from '../pages/farmer/VetProfilePage'
 import FarmerPaymentPage from '../pages/farmer/FarmerPaymentPage'
 import FarmerChatPage from '../pages/farmer/FarmerChatPage'
+import HistoryConsultationPage from '../pages/farmer/HistoryConsultationPage'
 import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
@@ -137,6 +138,10 @@ export const router = createBrowserRouter([
       {
         path: 'konsultasi/dokter/:vetId',
         element: <VetProfilePage />,
+      },
+      {
+        path: 'riwayat-konsultasi',
+        element: <HistoryConsultationPage />,
       },
       {
         path: 'lapor',

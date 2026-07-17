@@ -76,7 +76,11 @@ export default function CaseStatus() {
         }
 
         const fetchedConsultations = consultationResponse?.data?.consultations || [];
-        setActiveConsultations(fetchedConsultations);
+        // Filter hanya PENDING dan ACTIVE, tidak tampilkan COMPLETED/CLOSED
+        const activeOnly = fetchedConsultations.filter(
+          (c) => c.status === "PENDING" || c.status === "ACTIVE" || c.status === "IN_PROGRESS"
+        );
+        setActiveConsultations(activeOnly);
       } catch (err) {
         if (isMounted) setError(err?.message || "Gagal memuat data konsultasi.");
       } finally {
@@ -142,6 +146,12 @@ export default function CaseStatus() {
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#69736C] md:text-base">
             Gunakan geolokasi akun Anda untuk mencari dokter hewan terdekat secara riil melalui database Veternak.
           </p>
+          <Link
+            to="/peternak/riwayat-konsultasi"
+            className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-brand-green hover:text-brand-green/80"
+          >
+            📋 Lihat Riwayat Konsultasi
+          </Link>
         </div>
 
         <div className="rounded-[2rem] border border-[#D8EDAC] bg-brand-soft p-6">
@@ -310,16 +320,27 @@ export default function CaseStatus() {
               {vets.map((doctor) => {
                 const selected = String(selectedDoctorId) === String(doctor.id);
                 const specialties = "Spesialis Ruminansia";
+                // Check if doctor is currently in active consultation
+                const isInActiveChat = activeConsultations.some(
+                  (c) => c.vet?.id === doctor.id && c.status !== "PENDING" && c.status !== "COMPLETED" && c.status !== "CLOSED"
+                );
                 return (
                   <button
                     key={doctor.id}
                     type="button"
                     onClick={() => {
-                      setSelectedDoctorId(String(doctor.id));
-                      setConsultMode("Chat");
+                      if (!isInActiveChat) {
+                        setSelectedDoctorId(String(doctor.id));
+                        setConsultMode("Chat");
+                      }
                     }}
-                    className={`w-full rounded-[2rem] border p-4 text-left transition-all md:p-5 ${
-                      selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
+                    disabled={isInActiveChat}
+                    className={`w-full rounded-4xl border p-4 text-left transition-all md:p-5 ${
+                      isInActiveChat
+                        ? "border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed"
+                        : selected
+                        ? "border-brand-green bg-brand-soft"
+                        : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
                     }`}
                   >
                     <div className="flex gap-3 sm:gap-4">
@@ -334,6 +355,11 @@ export default function CaseStatus() {
                             <span className="mb-1.5 inline-flex rounded-full bg-brand-soft px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-brand-green">
                               {doctor.isVerified ? "Terverifikasi" : "Mitra Rujukan"}
                             </span>
+                            {isInActiveChat && (
+                              <span className="ml-2 inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-red-700">
+                                Sedang Chat
+                              </span>
+                            )}
                             <h2 className="text-base sm:text-lg font-bold text-primary-dark truncate">{doctor.name}</h2>
                             <p className="mt-0.5 text-xs sm:text-sm text-[#69736C] truncate">{specialties}</p>
                           </div>

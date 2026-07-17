@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getConsultationById, getChatHistory } from "../../services/farmerCoreService";
+import { getConsultationById, getChatHistory, completeConsultation } from "../../services/farmerCoreService";
 import { useChatSocket } from "../../services/socket";
+
+const SESSION_DURATION = 3600; // 1 hour in seconds
 
 export default function FarmerChatPage() {
   const { id } = useParams();
@@ -11,6 +13,10 @@ export default function FarmerChatPage() {
   const [draft, setDraft] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sessionTimeLeft, setSessionTimeLeft] = useState(SESSION_DURATION);
+  const [isSessionEnded, setIsSessionEnded] = useState(false);
+  const [hasVetResponded, setHasVetResponded] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false);
   const chatBottomRef = useRef(null);
 
   // Fetch consultation and history
@@ -48,10 +54,67 @@ export default function FarmerChatPage() {
     };
   }, [id, navigate]);
 
-  // Scroll to bottom on new messages
+  // Detect if vet has responded and start timer
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0 && !hasVetResponded) {
+      const vetMessage = messages.find((m) => m.senderRole === "VET");
+      if (vetMessage) {
+        setHasVetResponded(true);
+        setTimerStarted(true);
+      }
+    }
+  }, [messages, hasVetResponded]);
+
+  // Timer countdown effect - only runs if vet has responded
+  useEffect(() => {
+    if (!timerStarted || isSessionEnded || isLoading) return;
+
+    const interval = setInterval(() => {
+      setSessionTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsSessionEnded(true);
+          handleSessionTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerStarted, isSessionEnded, isLoading]);
+
+  const handleSessionTimeout = async () => {
+    try {
+      await completeConsultation(id);
+      alert("Waktu sesi chat Anda (1 jam) telah berakhir. Sesi ditutup dan dipindahkan ke riwayat konsultasi.");
+      navigate("/peternak/riwayat-konsultasi");
+    } catch (err) {
+      console.error("Error completing consultation:", err);
+      navigate("/peternak/konsultasi");
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (window.confirm("Akhiri sesi chat? Anda tidak akan bisa melanjutkan percakapan setelah ini.")) {
+      try {
+        setIsSessionEnded(true);
+        await completeConsultation(id);
+        alert("Sesi chat berhasil diakhiri dan dipindahkan ke riwayat konsultasi.");
+        navigate("/peternak/riwayat-konsultasi");
+      } catch (err) {
+        console.error("Error ending session:", err);
+        alert("Gagal mengakhiri sesi: " + (err.message || "Unknown error"));
+        setIsSessionEnded(false);
+      }
+    }
+  };
+
+  const formatTimeLeft = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   // Handle socket incoming message
   const handleIncomingMessage = useCallback((message) => {
@@ -113,12 +176,36 @@ export default function FarmerChatPage() {
             <h1 className="mt-2 text-2xl font-bold text-primary-dark">Sesi Chat {vet.name}</h1>
             <p className="text-xs text-[#69736C]">Konsultasi untuk hewan: <span className="font-bold text-brand-green">{animal.name} ({animal.species})</span></p>
           </div>
-          <Link
-            to="/peternak/konsultasi"
-            className="text-xs font-bold text-brand-green border border-[#E5EAE6] px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            ← Kembali
-          </Link>
+          
+          <div className="flex flex-col gap-2 md:items-end">
+            {/* Timer Display */}
+            <div className={`text-xs font-bold px-3 py-2 rounded-lg ${
+              hasVetResponded
+                ? sessionTimeLeft <= 300 
+                  ? "bg-red-100 text-red-700" 
+                  : "bg-blue-100 text-blue-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}>
+              {hasVetResponded 
+                ? `Sisa waktu: ${formatTimeLeft(sessionTimeLeft)}`
+                : "Menunggu dokter merespon..."}
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleEndSession}
+                className="text-xs font-bold text-red-600 border border-red-300 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Akhiri Sesi
+              </button>
+              <Link
+                to="/peternak/konsultasi"
+                className="text-xs font-bold text-brand-green border border-[#E5EAE6] px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                ← Kembali
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Message Flow */}
