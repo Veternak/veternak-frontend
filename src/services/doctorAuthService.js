@@ -1,58 +1,90 @@
-import { doctorDemoProfile } from '../data/doctorDemoData'
+import { apiRequest, getCoordinates } from './apiClient'
 
-const wait = (ms = 400) => new Promise((resolve) => {
-  window.setTimeout(resolve, ms)
-})
+const TOKEN_KEY = 'veternak_access_token'
+const DOCTOR_KEY = 'veternak_doctor'
+
+export function storeDoctorSession({ token, vet }) {
+  if (!token) return
+  window.localStorage.setItem(TOKEN_KEY, token)
+  if (vet) {
+    window.localStorage.setItem(DOCTOR_KEY, JSON.stringify(vet))
+  }
+}
+
+export function clearDoctorSession() {
+  window.localStorage.removeItem(TOKEN_KEY)
+  window.localStorage.removeItem(DOCTOR_KEY)
+}
+
+export function getStoredDoctor() {
+  if (typeof window === 'undefined') return null
+
+  const raw = window.localStorage.getItem(DOCTOR_KEY)
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export function getDoctorDisplayName() {
+  return getStoredDoctor()?.name || 'Dokter Hewan'
+}
 
 export async function loginDoctor(payload) {
-  await wait()
-
   if (!payload?.identifier || !payload?.password) {
-    throw new Error('Nomor HP/email dan password wajib diisi.')
+    throw new Error('Nomor HP dan password wajib diisi.')
   }
 
-  if (payload.identifier.trim().toLowerCase() === 'gagal') {
-    throw new Error('Akun dokter demo tidak ditemukan.')
-  }
+  const coords = await getCoordinates();
+  const response = await apiRequest('/auth/vet/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone: payload.identifier,
+      password: payload.password,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+    }),
+  })
 
-  return {
-    user: {
-      id: doctorDemoProfile.id,
-      name: doctorDemoProfile.name,
-      role: 'VETERINARIAN',
-      verificationStatus: doctorDemoProfile.verificationStatus,
-      isDemo: true,
-    },
-    session: {
-      type: 'MOCK_SESSION',
-      token: null,
-    },
-  }
+  storeDoctorSession(response.data)
+  return response
 }
 
 export async function registerDoctor(payload) {
-  await wait()
-
-  return {
-    user: {
-      id: 'vet-demo-pending',
-      name: payload?.name || 'Dokter Veternak',
-      role: 'VETERINARIAN',
-      verificationStatus: 'PENDING_VERIFICATION',
-      isDemo: true,
-    },
+  const coords = await getCoordinates();
+  const registerPayload = {
+    name: payload.name,
+    phone: payload.phone,
+    password: payload.password,
+    strNumber: payload.strNumber,
+    province: payload.province || null,
+    regency: payload.city || null,
+    district: payload.district || null,
+    addressDetail: payload.addressDetail || null,
+    latitude: payload.latitude ?? coords.latitude,
+    longitude: payload.longitude ?? coords.longitude,
   }
-}
 
-export async function logoutDoctor() {
-  await wait(200)
-  return { success: true }
+  return apiRequest('/auth/vet/register', {
+    method: 'POST',
+    body: JSON.stringify(registerPayload),
+  })
 }
 
 export async function getDoctorVerificationStatus() {
-  await wait(200)
+  const doctor = getStoredDoctor()
+  if (!doctor) {
+    return {
+      status: 'PENDING_VERIFICATION',
+      isDemo: false,
+    }
+  }
+
   return {
-    status: doctorDemoProfile.verificationStatus,
-    isDemo: true,
+    status: doctor.isVerified ? 'VERIFIED' : 'PENDING_VERIFICATION',
+    isDemo: false,
   }
 }

@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import logoFull from '../../assets/logo-full.png'
-import { doctorDemoCases, doctorDemoNotifications, doctorDemoProfile } from '../../data/doctorDemoData'
+import { doctorDemoCases, doctorDemoNotifications } from '../../data/doctorDemoData'
+import { clearDoctorSession, getStoredDoctor, getDoctorDisplayName } from '../../services/doctorAuthService'
 
 const navItems = [
   { icon: 'grid', label: 'Dashboard', to: '/dokter-app/dashboard' },
@@ -69,7 +70,27 @@ function NavIcon({ name }) {
 }
 
 export default function DoctorShell() {
-  const [isAvailable, setIsAvailable] = useState(doctorDemoProfile.availabilityStatus === 'AVAILABLE')
+  const navigate = useNavigate()
+  const doctor = getStoredDoctor()
+  const doctorName = getDoctorDisplayName()
+  const doctorInitial = doctorName.slice(0, 2).toUpperCase()
+
+  const [isAvailable, setIsAvailable] = useState(true)
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('veternak_access_token')
+    const storedDoctor = getStoredDoctor()
+    if (!token || !storedDoctor) {
+      navigate('/dokter/masuk')
+    }
+  }, [navigate])
+
+  if (!doctor) return null
+
+  const handleLogout = () => {
+    clearDoctorSession()
+    navigate('/')
+  }
 
   return (
     <div className="min-h-screen bg-[#F3F8F1] text-main-text">
@@ -84,12 +105,12 @@ export default function DoctorShell() {
 
         <div className="mt-7 rounded-[26px] border border-[#E3EFDE] bg-gradient-to-br from-[#FBFDF6] to-white p-4 shadow-[0_16px_36px_rgba(19,59,38,0.08)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green text-sm font-extrabold text-white">
-              AP
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-green text-sm font-extrabold text-white">
+              {doctorInitial}
             </div>
             <div className="min-w-0">
-              <p className="truncate font-extrabold leading-tight text-primary-dark">{doctorDemoProfile.name}</p>
-              <p className="mt-1 text-xs font-semibold text-gray-600">{doctorDemoProfile.roleLabel}</p>
+              <p className="truncate font-extrabold leading-tight text-primary-dark">{doctorName}</p>
+              <p className="mt-1 text-xs font-semibold text-gray-600">Dokter Hewan</p>
             </div>
           </div>
 
@@ -99,7 +120,7 @@ export default function DoctorShell() {
               Online
             </span>
             <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#1D5937] shadow-sm">
-              Terverifikasi
+              {doctor.isVerified ? 'Terverifikasi' : 'Belum Verifikasi'}
             </span>
           </div>
 
@@ -153,6 +174,14 @@ export default function DoctorShell() {
             </NavLink>
           ))}
         </nav>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-6 mb-4 text-left text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors uppercase tracking-widest cursor-pointer"
+        >
+          Keluar
+        </button>
 
         <p className="mt-auto rounded-[22px] border border-[#E3EFDE] bg-[#F8FAF8] p-4 text-xs leading-5 text-gray-600 shadow-[0_10px_24px_rgba(19,59,38,0.05)]">
           Chat bukan kanal darurat terjamin. Jika kondisi memburuk, arahkan peternak ke bantuan dokter atau layanan terdekat.

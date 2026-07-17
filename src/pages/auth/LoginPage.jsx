@@ -126,7 +126,7 @@ export default function LoginPage() {
             }
             name="password"
             onChange={handleChange}
-            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+            placeholder="••••••••"
             value={values.password}
           />
           <div className="mt-3 text-right">
@@ -142,7 +142,7 @@ export default function LoginPage() {
         <FormError>{formError}</FormError>
 
         <Button disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Memeriksa...' : 'Masuk â†’'}
+          {isSubmitting ? 'Memeriksa...' : 'Masuk'}
         </Button>
       </form>
     </AuthLayout>

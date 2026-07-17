@@ -1,20 +1,43 @@
 import { useState } from 'react'
 import DoctorSectionCard from '../../components/doctor/DoctorSectionCard'
 import DoctorStatusBadge from '../../components/doctor/DoctorStatusBadge'
-import { doctorDemoProfile } from '../../data/doctorDemoData'
+import { getStoredDoctor } from '../../services/doctorAuthService'
 
 function maskStr(value) {
   if (!value) return '-'
   return `${value.slice(0, 8)}••••${value.slice(-3)}`
 }
 
+function displayValue(value) {
+  return value || 'Belum diisi';
+}
+
 export default function DoctorProfilePage() {
+  const doctor = getStoredDoctor() || {};
+
+  const doctorInfo = {
+    id: doctor.id || 'vet-doctor-001',
+    name: doctor.name || 'drh. Anindya Putri',
+    roleLabel: 'Dokter Hewan',
+    strNumber: doctor.strNumber || 'STR-2026-001',
+    verificationStatus: doctor.isVerified ? 'VERIFIED' : 'PENDING_VERIFICATION',
+    availabilityStatus: doctor.availabilityStatus || 'AVAILABLE',
+    specialties: doctor.specialties || ['Sapi', 'Kerbau'],
+    services: doctor.services || ['Konsultasi Online', 'Kunjungan Lapangan'],
+    serviceArea: [doctor.district, doctor.regency, doctor.province].filter(Boolean).join(', ') || 'Kabupaten Sleman, DI Yogyakarta',
+    schedule: doctor.schedule || [
+      { day: 'Senin - Jumat', time: '08.00 - 16.00 WIB' },
+      { day: 'Sabtu', time: '09.00 - 13.00 WIB' },
+    ],
+  };
+
   const [profile, setProfile] = useState({
-    services: doctorDemoProfile.services.join(', '),
-    serviceArea: doctorDemoProfile.serviceArea,
-    schedule: doctorDemoProfile.schedule.map((item) => `${item.day}: ${item.time}`).join('\n'),
-    availabilityStatus: doctorDemoProfile.availabilityStatus,
+    services: Array.isArray(doctorInfo.services) ? doctorInfo.services.join(', ') : (doctorInfo.services || ''),
+    serviceArea: doctorInfo.serviceArea,
+    schedule: Array.isArray(doctorInfo.schedule) ? doctorInfo.schedule.map((item) => `${item.day}: ${item.time}`).join('\n') : (doctorInfo.schedule || ''),
+    availabilityStatus: doctorInfo.availabilityStatus,
   })
+  
   const [saved, setSaved] = useState(false)
 
   function updateField(name, value) {
@@ -31,10 +54,10 @@ export default function DoctorProfilePage() {
               <span className="inline-flex rounded-full bg-brand-soft px-3 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-brand-green">
                 Profil dokter
               </span>
-              <DoctorStatusBadge status={doctorDemoProfile.verificationStatus} />
+              <DoctorStatusBadge status={doctorInfo.verificationStatus} />
             </div>
-            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-primary-dark">{doctorDemoProfile.name}</h1>
-            <p className="mt-2 text-gray-600">{doctorDemoProfile.roleLabel}</p>
+            <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-primary-dark">{doctorInfo.name}</h1>
+            <p className="mt-2 text-gray-600">{doctorInfo.roleLabel}</p>
           </div>
           <div className="rounded-2xl border border-[#E7EFE4] bg-white p-4 text-sm shadow-[0_10px_24px_rgba(19,59,38,0.06)]">
             <p className="font-bold text-primary-dark">Status layanan</p>
@@ -48,8 +71,8 @@ export default function DoctorProfilePage() {
           <DoctorSectionCard title="Kredensial">
             <dl className="grid gap-3 text-sm">
               {[
-                ['Nomor STR', maskStr(doctorDemoProfile.strNumber)],
-                ['Spesialisasi', doctorDemoProfile.specialties.join(', ')],
+                ['Nomor STR', maskStr(doctorInfo.strNumber)],
+                ['Spesialisasi', Array.isArray(doctorInfo.specialties) ? doctorInfo.specialties.join(', ') : displayValue(doctorInfo.specialties)],
                 ['Dokumen STR', 'str-terverifikasi.pdf'],
               ].map(([label, value]) => (
                 <div className="rounded-xl bg-neutral-bg px-4 py-3" key={label}>
@@ -59,7 +82,7 @@ export default function DoctorProfilePage() {
               ))}
               <div className="rounded-xl bg-neutral-bg px-4 py-3">
                 <dt className="font-bold text-gray-500">Status verifikasi</dt>
-                <dd className="mt-2"><DoctorStatusBadge status={doctorDemoProfile.verificationStatus} /></dd>
+                <dd className="mt-2"><DoctorStatusBadge status={doctorInfo.verificationStatus} /></dd>
               </div>
             </dl>
           </DoctorSectionCard>

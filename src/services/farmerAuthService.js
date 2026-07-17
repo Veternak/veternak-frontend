@@ -1,4 +1,4 @@
-import { apiRequest } from './apiClient'
+import { apiRequest, getCoordinates } from './apiClient'
 
 const TOKEN_KEY = 'veternak_access_token'
 const FARMER_KEY = 'veternak_farmer'
@@ -34,11 +34,14 @@ export function getFarmerDisplayName() {
 }
 
 export async function loginFarmer(payload) {
+  const coords = await getCoordinates();
   const response = await apiRequest('/auth/farmer/login', {
     method: 'POST',
     body: JSON.stringify({
       phone: payload.phone,
       password: payload.password,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
     }),
   })
 
@@ -47,6 +50,7 @@ export async function loginFarmer(payload) {
 }
 
 export async function registerFarmer(payload) {
+  const coords = await getCoordinates();
   return apiRequest('/auth/farmer/register', {
     method: 'POST',
     body: JSON.stringify({
@@ -57,8 +61,8 @@ export async function registerFarmer(payload) {
       regency: payload.regency || null,
       district: payload.district || null,
       addressDetail: payload.addressDetail || null,
-      latitude: payload.latitude ?? null,
-      longitude: payload.longitude ?? null,
+      latitude: payload.latitude ?? coords.latitude,
+      longitude: payload.longitude ?? coords.longitude,
     }),
   })
 }

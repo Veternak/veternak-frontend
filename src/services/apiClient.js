@@ -66,3 +66,25 @@ export async function apiRequest(path, options = {}) {
 
   return data
 }
+
+export function getCoordinates() {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      resolve({ latitude: null, longitude: null })
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      },
+      () => {
+        resolve({ latitude: null, longitude: null })
+      },
+      { timeout: 4000 }
+    )
+  })
+}
+

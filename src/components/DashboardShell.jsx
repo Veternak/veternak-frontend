@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo-full.png';
-import { clearFarmerSession, getFarmerDisplayName } from '../services/farmerAuthService';
+import { clearFarmerSession, getFarmerDisplayName, getStoredFarmer } from '../services/farmerAuthService';
 
 const icons = {
   home: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -29,8 +30,19 @@ function isActive(pathname, path) {
 export default function DashboardShell() {
   const navigate = useNavigate();
   const location = useLocation();
+  const farmer = getStoredFarmer();
   const farmerName = getFarmerDisplayName();
   const farmerInitial = farmerName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    const token = window.localStorage.getItem('veternak_access_token');
+    const storedFarmer = getStoredFarmer();
+    if (!token || !storedFarmer) {
+      navigate('/masuk');
+    }
+  }, [navigate]);
+
+  if (!farmer) return null;
 
   const handleLogout = () => {
     clearFarmerSession();
