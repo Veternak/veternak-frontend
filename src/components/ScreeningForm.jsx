@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { buildDiagnosisPayload, diagnoseAnimal } from "../services/aiDiagnosisService";
 import { createAnimal, createConsultation, getAnimalById, getAnimals, getVets } from "../services/farmerCoreService";
+import { getCoordinates } from "../services/apiClient";
 
 const animals = [
   {
@@ -254,14 +255,22 @@ export default function ScreeningForm() {
   };
 
   useEffect(() => {
-    getVets()
+    getCoordinates()
+      .then((coords) => {
+        const params = {};
+        if (coords.latitude && coords.longitude) {
+          params.lat = coords.latitude;
+          params.long = coords.longitude;
+        }
+        return getVets(params);
+      })
       .then((response) => {
         const vets = response?.data?.vets || [];
         setBackendVets(vets);
         if (vets[0]) setSelectedDoctor(String(vets[0].id));
       })
       .catch(() => {
-        setSelectedDoctor(fallbackDoctors[0].name);
+        setSelectedDoctor(fallbackDoctors[0] ? fallbackDoctors[0].name : "");
       });
   }, []);
 
@@ -345,9 +354,9 @@ export default function ScreeningForm() {
       if (!result) return;
     }
 
-    const selectedBackendVet = doctors.find((doctor) => String(doctor.id) === String(selectedDoctor) && doctor.source === "backend");
+    const selectedBackendVet = doctors.find((doctor) => String(doctor.id) === String(selectedDoctor));
     if (!selectedBackendVet) {
-      setDiagnosisError("Pilih dokter dari data backend terlebih dahulu untuk membuat konsultasi.");
+      setDiagnosisError("Silakan pilih dokter terlebih dahulu untuk membuat konsultasi.");
       return;
     }
 
@@ -365,7 +374,8 @@ export default function ScreeningForm() {
       setConsultationResult(consultation.data);
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(() => {
-        navigate("/peternak/konsultasi");
+        const consId = consultation.data?.consultation?.id || consultation.consultation?.id || consultation.id;
+        navigate(`/peternak/konsultasi/${consId}/pembayaran`);
       }, 2500);
     } catch (error) {
       setDiagnosisError(error?.message || "Gagal membuat konsultasi. Coba lagi.");
@@ -402,7 +412,7 @@ export default function ScreeningForm() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="mx-auto max-w-4xl">
         <div className="rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm md:p-8">
           {step === 0 && (
             <div>
@@ -613,7 +623,7 @@ export default function ScreeningForm() {
                       </section>
 
                       {/* TOP 3 DISEASES BY PROBABILITY */}
-                      {diagnosisData.predictions && diagnosisData.predictions.length > 0 && (
+                      {!isHealthy && diagnosisData.predictions && diagnosisData.predictions.length > 0 && (
                         <section className="rounded-3xl border border-[#E5EAE6] bg-white p-6 shadow-sm">
                           <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Top 3 Kemungkinan Penyakit Terbesar</p>
                           <div className="grid gap-4">
@@ -729,31 +739,6 @@ export default function ScreeningForm() {
             </div>
           )}
         </div>
-
-        <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Draft laporan</p>
-          <h2 className="text-xl font-bold text-primary-dark">{animal.name}</h2>
-          <p className="mt-1 text-sm text-[#69736C]">{animal.species} | {selectedBackendAnimal ? getAnimalCode(selectedBackendAnimal) : "Kode otomatis"}</p>
-          <div className="my-5 h-px bg-[#E5EAE6]" />
-          <div className="space-y-4 text-sm">
-            <div>
-              <p className="font-bold text-primary-dark">Kondisi terpilih</p>
-              <p className="mt-1 text-[#69736C]">{positiveSymptomCount} Ya, {possibleSymptomCount} Mungkin</p>
-            </div>
-            <div>
-              <p className="font-bold text-primary-dark">Data model</p>
-              <p className="mt-1 text-[#69736C]">{species}, {animalAge} bulan</p>
-            </div>
-            <div>
-              <p className="font-bold text-primary-dark">Foto</p>
-              <p className="mt-1 text-[#69736C]">{photoCount} dari maksimal 3 foto demo</p>
-            </div>
-            <div className="rounded-xl bg-[#EAF3FB] p-4 text-[#205580]">
-              <p className="font-bold">Dibantu Asisten Veternak</p>
-              <p className="mt-1 text-xs leading-relaxed">Sistem membantu menyusun laporan, bukan memberi diagnosis.</p>
-            </div>
-          </div>
-        </aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5EAE6] bg-white/95 px-4 py-3 backdrop-blur md:left-64">

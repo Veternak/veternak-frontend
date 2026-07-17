@@ -113,16 +113,14 @@ export default function FarmerProfilePage() {
                 <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Profil peternak</p>
                 <h1 className="text-3xl font-bold leading-tight text-primary-dark md:text-4xl">{displayValue(farmer.name)}</h1>
                 <p className="mt-2 text-base font-semibold text-[#505B53]">{locationText}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#69736C]">Data utama peternak aktif terhubung ke database Veternak.</p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {[
               ['Ternak aktif', isLoading ? '...' : `${animals.length} ekor`],
               ['Kasus aktif', '0 kasus'],
-              ['Farmer ID', displayValue(farmer.id)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-2xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8D978F]">{label}</p>
@@ -270,7 +268,7 @@ export default function FarmerProfilePage() {
             {[
               ['consultation', 'Notifikasi konsultasi', 'Balasan dokter dan status kasus.'],
               ['visit', 'Notifikasi kunjungan', 'Konfirmasi dan estimasi kedatangan.'],
-              ['academy', 'Rekomendasi akademi', 'Materi edukasi sesuai ternak.'],
+              // ['academy', 'Rekomendasi akademi', 'Materi edukasi sesuai ternak.'],
             ].map(([key, title, description]) => (
               <button
                 key={key}

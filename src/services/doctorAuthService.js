@@ -109,7 +109,7 @@ export async function updateVetProfile(payload) {
 }
 
 export async function getVetConsultations() {
-  return apiRequest('/vet/consultations', { method: 'GET' })
+  return apiRequest('/consultations', { method: 'GET' })
 }
 
 export async function approveVisit(visitId, payload) {

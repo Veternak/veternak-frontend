@@ -20,6 +20,9 @@ import FarmerHomeRoute from '../pages/farmer/FarmerHomeRoute'
 import FarmerMarketplacePage from '../pages/farmer/FarmerMarketplacePage'
 import FarmerProfilePage from '../pages/farmer/FarmerProfilePage'
 import VetProfilePage from '../pages/farmer/VetProfilePage'
+import FarmerPaymentPage from '../pages/farmer/FarmerPaymentPage'
+import FarmerChatPage from '../pages/farmer/FarmerChatPage'
+import HistoryConsultationPage from '../pages/farmer/HistoryConsultationPage'
 import LandingPage from '../pages/LandingPage'
 import NotFoundPage from '../pages/NotFoundPage'
 
@@ -125,8 +128,20 @@ export const router = createBrowserRouter([
         element: <CaseStatus />,
       },
       {
+        path: 'konsultasi/:id',
+        element: <FarmerChatPage />,
+      },
+      {
+        path: 'konsultasi/:id/pembayaran',
+        element: <FarmerPaymentPage />,
+      },
+      {
         path: 'konsultasi/dokter/:vetId',
         element: <VetProfilePage />,
+      },
+      {
+        path: 'riwayat-konsultasi',
+        element: <HistoryConsultationPage />,
       },
       {
         path: 'lapor',

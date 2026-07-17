@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getStoredFarmer } from "../services/farmerAuthService";
-import { getAnimals, getVets, createConsultation, requestVisit } from "../services/farmerCoreService";
+import { getAnimals, getVets, createConsultation, requestVisit, getConsultations, cancelConsultation } from "../services/farmerCoreService";
 
 const filters = ["Paling sesuai", "Terdekat", "Kunjungan"];
 
@@ -32,6 +32,9 @@ export default function CaseStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [activeConsultations, setActiveConsultations] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
   const navigate = useNavigate();
   const farmer = getStoredFarmer();
 
@@ -51,9 +54,10 @@ export default function CaseStatus() {
           params.canVisit = true;
         }
 
-        const [vetResponse, animalResponse] = await Promise.all([
+        const [vetResponse, animalResponse, consultationResponse] = await Promise.all([
           getVets(params),
           getAnimals(),
+          getConsultations(),
         ]);
 
         if (!isMounted) return;
@@ -70,6 +74,13 @@ export default function CaseStatus() {
         if (fetchedAnimals.length > 0) {
           setSelectedAnimalId(String(fetchedAnimals[0].id));
         }
+
+        const fetchedConsultations = consultationResponse?.data?.consultations || [];
+        // Filter hanya PENDING dan ACTIVE, tidak tampilkan COMPLETED/CLOSED
+        const activeOnly = fetchedConsultations.filter(
+          (c) => c.status === "PENDING" || c.status === "ACTIVE" || c.status === "IN_PROGRESS"
+        );
+        setActiveConsultations(activeOnly);
       } catch (err) {
         if (isMounted) setError(err?.message || "Gagal memuat data konsultasi.");
       } finally {
@@ -118,12 +129,9 @@ export default function CaseStatus() {
           estimatedTime: new Date(Date.now() + 86400000).toISOString(),
           notes: "Permintaan kunjungan fisik lapangan.",
         });
-        alert("Konsultasi dan kunjungan lapangan berhasil dibuat!");
-      } else {
-        alert("Konsultasi chat berhasil dibuat!");
       }
 
-      navigate("/peternak/konsultasi");
+      navigate(`/peternak/konsultasi/${cons.id}/pembayaran`);
     } catch (err) {
       alert(err.message || "Gagal mengatur konsultasi.");
     }
@@ -138,6 +146,12 @@ export default function CaseStatus() {
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#69736C] md:text-base">
             Gunakan geolokasi akun Anda untuk mencari dokter hewan terdekat secara riil melalui database Veternak.
           </p>
+          <Link
+            to="/peternak/riwayat-konsultasi"
+            className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-brand-green hover:text-brand-green/80"
+          >
+            📋 Lihat Riwayat Konsultasi
+          </Link>
         </div>
 
         <div className="rounded-[2rem] border border-[#D8EDAC] bg-brand-soft p-6">
@@ -153,6 +167,113 @@ export default function CaseStatus() {
           </div>
         </div>
       </div>
+
+      {/* ACTIVE CONSULTATIONS LIST SECTION */}
+      {!isLoading && activeConsultations.length > 0 && (
+        <div className="mb-8 rounded-4xl border border-brand-green/20 bg-brand-soft/20 p-6 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-4">Percakapan &amp; Konsultasi Aktif Anda</p>
+          
+          {/* Pagination info */}
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm font-semibold text-gray-600">
+              Menampilkan {Math.min((currentPage - 1) * itemsPerPage + 1, activeConsultations.length)} - {Math.min(currentPage * itemsPerPage, activeConsultations.length)} dari {activeConsultations.length} konsultasi
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {activeConsultations
+              .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+              .map((c) => {
+                const isPendingPayment = c.status === "PENDING";
+                return (
+                  <div key={c.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          isPendingPayment ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {isPendingPayment ? "Menunggu Pembayaran" : "Konsultasi Aktif"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-semibold">
+                          {new Date(c.createdAt).toLocaleDateString("id-ID")}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-primary-dark text-base">{c.vet?.name || "Dokter Hewan"}</h4>
+                      <p className="text-xs text-[#69736C] mt-0.5">Pasien: <span className="font-bold">{c.animal?.name || "Ternak"}</span></p>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => navigate(isPendingPayment ? `/peternak/konsultasi/${c.id}/pembayaran` : `/peternak/konsultasi/${c.id}`)}
+                        className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 ${
+                          isPendingPayment 
+                            ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                            : 'bg-brand-green hover:bg-brand-green/90 text-white'
+                        }`}
+                      >
+                        {isPendingPayment ? "Bayar" : "Buka Chat"}
+                      </button>
+                      {isPendingPayment && (
+                        <button
+                          onClick={async () => {
+                            if (window.confirm("Batalkan konsultasi ini?")) {
+                              try {
+                                await cancelConsultation(c.id);
+                                alert("Berhasil dibatalkan");
+                                window.location.reload();
+                              } catch (err) {
+                                alert(err.message || "Gagal membatalkan");
+                              }
+                            }
+                          }}
+                          className="px-3 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors"
+                        >
+                          Batal
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* Pagination controls */}
+          {Math.ceil(activeConsultations.length / itemsPerPage) > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-2 py-1 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ← Prev
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.ceil(activeConsultations.length / itemsPerPage) }).map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-8 h-8 rounded-lg font-bold text-xs ${
+                      currentPage === i + 1
+                        ? 'bg-brand-green text-white'
+                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(Math.ceil(activeConsultations.length / itemsPerPage), p + 1))}
+                disabled={currentPage === Math.ceil(activeConsultations.length / itemsPerPage)}
+                className="px-2 py-1 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {isLoading && (
         <p className="rounded-[2rem] border border-gray-100 bg-white p-8 text-center text-sm font-semibold text-gray-500 shadow-sm">
@@ -199,16 +320,27 @@ export default function CaseStatus() {
               {vets.map((doctor) => {
                 const selected = String(selectedDoctorId) === String(doctor.id);
                 const specialties = "Spesialis Ruminansia";
+                // Check if doctor is currently in active consultation
+                const isInActiveChat = activeConsultations.some(
+                  (c) => c.vet?.id === doctor.id && c.status !== "PENDING" && c.status !== "COMPLETED" && c.status !== "CLOSED"
+                );
                 return (
                   <button
                     key={doctor.id}
                     type="button"
                     onClick={() => {
-                      setSelectedDoctorId(String(doctor.id));
-                      setConsultMode("Chat");
+                      if (!isInActiveChat) {
+                        setSelectedDoctorId(String(doctor.id));
+                        setConsultMode("Chat");
+                      }
                     }}
-                    className={`w-full rounded-[2rem] border p-4 text-left transition-all md:p-5 ${
-                      selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
+                    disabled={isInActiveChat}
+                    className={`w-full rounded-4xl border p-4 text-left transition-all md:p-5 ${
+                      isInActiveChat
+                        ? "border-gray-300 bg-gray-100 opacity-60 cursor-not-allowed"
+                        : selected
+                        ? "border-brand-green bg-brand-soft"
+                        : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
                     }`}
                   >
                     <div className="flex gap-3 sm:gap-4">
@@ -223,6 +355,11 @@ export default function CaseStatus() {
                             <span className="mb-1.5 inline-flex rounded-full bg-brand-soft px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-brand-green">
                               {doctor.isVerified ? "Terverifikasi" : "Mitra Rujukan"}
                             </span>
+                            {isInActiveChat && (
+                              <span className="ml-2 inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-red-700">
+                                Sedang Chat
+                              </span>
+                            )}
                             <h2 className="text-base sm:text-lg font-bold text-primary-dark truncate">{doctor.name}</h2>
                             <p className="mt-0.5 text-xs sm:text-sm text-[#69736C] truncate">{specialties}</p>
                           </div>
