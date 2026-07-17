@@ -1,42 +1,42 @@
 # 🐄 Veternak Frontend
-### *Tanggap Lebih Cepat, Ternak Lebih Sehat.*
+### *Faster Response, Healthier Livestock.*
 
-Veternak adalah **Smart Livestock Health Response Platform** yang dirancang khusus untuk peternak sapi dan kambing di Indonesia. Menggunakan pendekatan **"Pastoral Health-Tech"**, platform ini menghubungkan gejala lapangan dengan penanganan medis profesional secara instan.
+Veternak is a **Smart Livestock Health Response Platform** built specifically for cattle and goat farmers in Indonesia. Using a **"Pastoral Health-Tech"** approach, the platform connects field symptoms to professional medical care instantly.
 
-## ✨ Fitur Unggulan
-- **Editorial Organic UI:** Antarmuka yang tenang, bersih, dan profesional sesuai standar industri modern.
-- **Mobile-First Experience:** Optimasi penuh untuk penggunaan di lapangan (Kandang) dengan Bottom Navigation dan Carousel slider.
-- **Smart Screening Flow:** Alur pelaporan multi-step yang memudahkan peternak memberikan data akurat untuk diolah AI.
-- **Explainable Triage:** Indikator urgensi transparan (Darurat, Mendesak, Pemantauan) lengkap dengan panduan tindakan aman.
-- **Real-time Consultation:** Chat terintegrasi dan pelacakan timeline kasus untuk memantau perjalanan dokter ke lokasi.
+## ✨ Key Features
+- **Editorial Organic UI:** A calm, clean, professional interface that matches modern industry standards.
+- **Mobile-First Experience:** Fully optimized for field use (in the barn/pen) with Bottom Navigation and a Carousel slider.
+- **Smart Screening Flow:** A multi-step reporting flow that helps farmers provide accurate data for AI processing.
+- **Explainable Triage:** Transparent urgency indicators (Emergency, Urgent, Monitor) with clear, safe-action guidance.
+- **Real-time Consultation:** Integrated chat and case timeline tracking so farmers can follow the vet's journey to their location.
 
 ## 🛠 Tech Stack
 - **Framework:** React 19 (Vite)
 - **Styling:** Tailwind CSS v4 (Oxide Engine)
 - **Navigation:** React Router Dom
-- **Icons:** Custom SVG System (Zero-dependency)
+- **Icons:** Custom SVG System (zero-dependency)
 - **Animations:** Framer Motion
 
-## 🚀 Cara Menjalankan
-1. **Clone repositori:**
-   ```bash
+## 🚀 Getting Started
+1. **Clone the repo:**
+```bash
    git clone https://github.com/Veternak/veternak-frontend.git
    cd veternak-frontend
-   ```
+```
 
-2. **Install dependencies** (gunakan force jika ada konflik platform):
-   ```bash
+2. **Install dependencies** (use force if there are platform conflicts):
+```bash
    npm install --force
-   ```
+```
 
-3. **Jalankan server lokal:**
-   ```bash
+3. **Run the local server:**
+```bash
    npm run dev
-   ```
+```
 
-## 📐 Filosofi Desain
+## 📐 Design Philosophy
 
-Berdasarkan Veternak Design Guide v1.0, UI kami mengutamakan Kejelasan, Keamanan, dan Kepercayaan. Kami menghindari jargon medis rumit dan menggunakan palet warna hijau lembut untuk mengurangi kecemasan peternak saat terjadi darurat ternak.
+Based on the Veternak Design Guide v1.0, our UI prioritizes Clarity, Safety, and Trust. We avoid complex medical jargon and use a soft green color palette to reduce farmer anxiety during livestock emergencies.
 
 ---
-Tim Veternak - Garuda Hacks 2024
+Team Veternak - Garuda Hacks 2024
