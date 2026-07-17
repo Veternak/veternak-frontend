@@ -88,3 +88,72 @@ export async function getDoctorVerificationStatus() {
     isDemo: false,
   }
 }
+
+export async function getVetDashboard() {
+  return apiRequest('/vet/dashboard', { method: 'GET' })
+}
+
+export async function getVetProfile() {
+  return apiRequest('/vet/profile', { method: 'GET' })
+}
+
+export async function updateVetProfile(payload) {
+  const response = await apiRequest('/vet/profile', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (response?.data?.vet) {
+    window.localStorage.setItem(DOCTOR_KEY, JSON.stringify(response.data.vet))
+  }
+  return response
+}
+
+export async function getVetConsultations() {
+  return apiRequest('/vet/consultations', { method: 'GET' })
+}
+
+export async function approveVisit(visitId, payload) {
+  return apiRequest(`/vet/visits/${visitId}/approve`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function rejectVisit(visitId, payload) {
+  return apiRequest(`/vet/visits/${visitId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getVetVisits() {
+  return apiRequest('/vet/visits', { method: 'GET' })
+}
+
+export async function getConsultationById(id) {
+  return apiRequest(`/consultations/${id}`, { method: 'GET' })
+}
+
+export async function updateCaseStatus(id, status) {
+  return apiRequest(`/cases/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+}
+
+export async function createMedicalRecord(consultationId, payload) {
+  return apiRequest(`/consultations/${consultationId}/medical-record`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getChatHistory(consultationId) {
+  return apiRequest(`/consultations/${consultationId}/messages`, { method: 'GET' })
+}
+
+
+
+
+
+

@@ -66,3 +66,19 @@ export async function registerFarmer(payload) {
     }),
   })
 }
+
+export async function getFarmerProfile() {
+  return apiRequest('/farmer/profile', { method: 'GET' })
+}
+
+export async function updateFarmerProfile(payload) {
+  const response = await apiRequest('/farmer/profile', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (response?.data?.farmer) {
+    window.localStorage.setItem(FARMER_KEY, JSON.stringify(response.data.farmer))
+  }
+  return response
+}
+

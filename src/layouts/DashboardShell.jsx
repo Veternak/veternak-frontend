@@ -15,13 +15,13 @@ const icons = {
 
 const menuItems = [
   { id: 'dashboard', label: 'Beranda', icon: 'home', path: '/peternak/dashboard' },
-  { id: 'ternak', label: 'Ternak', icon: 'list', path: '/peternak/ternak' },
   { id: 'lapor', label: 'Lapor', icon: 'plus', isCta: true, path: '/peternak/lapor' },
   { id: 'konsultasi', label: 'Konsultasi', icon: 'chat', path: '/peternak/konsultasi' },
   { id: 'marketplace', label: 'Toko', icon: 'store', path: '/peternak/marketplace' },
   { id: 'akademi', label: 'Akademi', icon: 'book', path: '/peternak/akademi', desktopOnly: true },
   { id: 'profil', label: 'Profil', icon: 'user', path: '/peternak/profil', desktopOnly: true },
 ];
+
 
 function isActive(pathname, path) {
   return pathname === path || pathname.startsWith(`${path}/`);
@@ -51,8 +51,9 @@ export default function DashboardShell() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#F8FAF8] md:flex">
-      <aside className="fixed hidden h-full w-64 flex-col border-r border-gray-100 bg-white md:flex">
+      <aside className="fixed hidden h-full w-64 flex-col border-r border-gray-100 bg-white md:flex overflow-y-auto">
         <div className="p-8 pb-4">
+
           <img src={logo} alt="Veternak Logo" className="h-16 w-auto -ml-2 cursor-pointer object-contain" onClick={() => navigate('/')} />
         </div>
         <nav className="flex-grow space-y-2 px-4">
