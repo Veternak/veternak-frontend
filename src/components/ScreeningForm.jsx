@@ -315,36 +315,8 @@ export default function ScreeningForm() {
             <div>
               <h2 className="mb-2 text-2xl font-bold text-primary-dark">Lengkapi data awal ternak</h2>
               <p className="mb-6 text-sm text-[#69736C]">Bagian ini mengikuti input model screening agar data penting tidak terlewat.</p>
-              <div className="grid gap-4">
-                {animals.map((item) => {
-                  const selected = item.id === selectedAnimal;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedAnimal(item.id);
-                        setAnimalCode(item.id);
-                        setSpecies(item.species.includes("Kambing") ? "kambing" : "sapi");
-                      }}
-                      className={`flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all ${
-                        selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
-                      }`}
-                    >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                        {item.species.includes("Kambing") ? "K" : "S"}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-3">
-                          <h3 className="font-bold text-primary-dark">{item.name}</h3>
-                          {selected && <span className="text-brand-green"><CheckIcon /></span>}
-                        </div>
-                        <p className="mt-1 text-sm text-[#69736C]">{item.species} | {item.age} | {item.id}</p>
-                        <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8D978F]">{item.stall} - {item.status}</p>
-                      </div>
-                    </button>
-                  );
-                })}
+                            <div className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-4 text-sm leading-6 text-[#69736C]">
+                Masukkan data ternak yang ingin dilaporkan. Data ini akan dibuat sebagai profil ternak saat laporan dikirim.
               </div>
 
               <div className="mt-8 grid gap-5 md:grid-cols-2">

@@ -1,8 +1,19 @@
+import { useEffect, useState } from "react";
+import { apiRequest } from "../services/apiClient";
+import { getFarmerDisplayName } from "../services/farmerAuthService";
 export default function FarmerHome({ onLapor }) {
+  const farmerName = getFarmerDisplayName();
+  const [dashboard, setDashboard] = useState(null);
+
+  useEffect(() => {
+    apiRequest("/farmer/dashboard", { method: "GET" })
+      .then((response) => setDashboard(response.data))
+      .catch(() => setDashboard(null));
+  }, []);
   const stats = [
-    { label: "Sehat", count: 10, color: "text-brand-green", bg: "bg-brand-soft" },
-    { label: "Sakit", count: 1, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Pantau", count: 1, color: "text-yellow-600", bg: "bg-yellow-50" },
+    { label: "Total", count: dashboard?.totalAnimals ?? 0, color: "text-brand-green", bg: "bg-brand-soft" },
+    { label: "Konsultasi", count: dashboard?.totalConsultations ?? 0, color: "text-red-600", bg: "bg-red-50" },
+    { label: "Aktif", count: dashboard?.activeConsultations?.length ?? 0, color: "text-yellow-600", bg: "bg-yellow-50" },
   ];
 
   return (
@@ -11,11 +22,11 @@ export default function FarmerHome({ onLapor }) {
       <div className="flex justify-between items-end">
         <div>
           <p className="text-sm font-bold text-brand-green uppercase tracking-widest mb-1">Putra Mandiri Farm</p>
-          <h2 className="font-serif text-4xl text-primary-dark">Selamat Pagi,<br />Pak Masrukhi!</h2>
+          <h2 className="font-serif text-4xl text-primary-dark">Selamat Pagi,<br />{farmerName}!</h2>
         </div>
         <div className="hidden md:block text-right text-xs text-gray-400 font-medium">
           <p>Sleman, Yogyakarta</p>
-          <p>24°C • Cerah Berawan</p>
+          <p>24Ã‚Â°C Ã¢â‚¬Â¢ Cerah Berawan</p>
         </div>
       </div>
 
@@ -67,7 +78,7 @@ export default function FarmerHome({ onLapor }) {
           <div className="flex-grow">
             <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded uppercase">Biosecurity</span>
             <h5 className="font-serif text-xl text-primary-dark mt-2 mb-2 leading-tight">Pentingnya Sanitasi Kandang Pasca Melahirkan</h5>
-            <p className="text-xs text-gray-500">4 Menit Baca • Oleh drh. Siti</p>
+            <p className="text-xs text-gray-500">4 Menit Baca Ã¢â‚¬Â¢ Oleh drh. Siti</p>
           </div>
           <div className="w-20 h-20 bg-gray-200 rounded-2xl overflow-hidden shrink-0">
              <img src="https://images.unsplash.com/photo-1594140733592-2374662df94d?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" />

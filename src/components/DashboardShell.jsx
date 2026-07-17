@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import logo from "../assets/logo-full.png";
+import { clearFarmerSession, getFarmerDisplayName } from "../services/farmerAuthService";
 
 // Helper for SVGs - No library needed
 const Icon = ({ name }) => {
@@ -17,6 +18,14 @@ const Icon = ({ name }) => {
 export default function DashboardShell() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const farmerName = getFarmerDisplayName();
+  const farmerInitial = farmerName.charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    clearFarmerSession();
+    navigate("/");
+  };
 
   const menuItems = [
     { id: "dashboard", label: "Beranda", icon: "home", path: "/peternak/dashboard" },
@@ -59,17 +68,17 @@ export default function DashboardShell() {
         {/* Profile & Logout Area */}
         <div className="p-8 border-t border-gray-50 flex flex-col gap-4">
           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">M</div>
+              <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">{farmerInitial}</div>
               <div>
-                <p className="text-xs font-bold text-primary-dark">Masrukhi</p>
+                <p className="text-xs font-bold text-primary-dark">{farmerName}</p>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Peternak Sapi</p>
               </div>
           </div>
           <button 
-            onClick={() => window.location.href = "/"} 
+            onClick={handleLogout} 
             className="text-left text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors uppercase tracking-widest cursor-pointer"
           >
-            Keluar Ke Landing →
+            Keluar Ke Landing Ã¢â€ â€™
           </button>
         </div>
       </aside>
@@ -79,7 +88,7 @@ export default function DashboardShell() {
         {/* Mobile Header */}
         <div className="md:hidden flex justify-between items-center mb-6 pt-4 px-2">
           <img src={logo} alt="Veternak Logo" className="h-10 w-auto object-contain" />
-          <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">M</div>
+          <div className="w-10 h-10 bg-brand-soft rounded-full flex items-center justify-center text-brand-green font-bold">{farmerInitial}</div>
         </div>
         
         {/* THIS IS WHERE THE SUB-PAGES APPEAR */}

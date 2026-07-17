@@ -16,6 +16,23 @@ export function clearFarmerSession() {
   window.localStorage.removeItem(FARMER_KEY)
 }
 
+export function getStoredFarmer() {
+  if (typeof window === 'undefined') return null
+
+  const raw = window.localStorage.getItem(FARMER_KEY)
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export function getFarmerDisplayName() {
+  return getStoredFarmer()?.name || 'Peternak'
+}
+
 export async function loginFarmer(payload) {
   const response = await apiRequest('/auth/farmer/login', {
     method: 'POST',
