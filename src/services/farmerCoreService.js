@@ -11,6 +11,21 @@ export async function createAnimal(payload) {
   })
 }
 
+export async function getAnimalById(id) {
+  return apiRequest(`/animals/${id}`, { method: 'GET' })
+}
+
+export async function updateAnimal(id, payload) {
+  return apiRequest(`/animals/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteAnimal(id) {
+  return apiRequest(`/animals/${id}`, { method: 'DELETE' })
+}
+
 export async function getVets(params = {}) {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {

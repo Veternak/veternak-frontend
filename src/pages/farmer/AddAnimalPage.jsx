@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { createAnimal } from "../../services/farmerCoreService";
 
 const speciesOptions = ["Sapi", "Kerbau", "Kambing", "Domba"];
 const genderOptions = [
   { value: "MALE", label: "Jantan" },
   { value: "FEMALE", label: "Betina" },
-  { value: "UNKNOWN", label: "Belum tahu" },
 ];
 
 function ArrowLeftIcon() {
@@ -23,20 +23,21 @@ export default function AddAnimalPage() {
     species: "Sapi",
     ageValue: "",
     ageUnit: "bulan",
-    gender: "UNKNOWN",
+    gender: "MALE",
     code: "",
     stall: "",
     notes: "",
   });
   const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: "" }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const nextErrors = {};
 
@@ -49,11 +50,30 @@ export default function AddAnimalPage() {
     if (!form.species) {
       nextErrors.species = "Pilih jenis ternak.";
     }
+    if (!["MALE", "FEMALE"].includes(form.gender)) {
+      nextErrors.gender = "Pilih jenis kelamin ternak.";
+    }
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setSubmitted(true);
+    const payload = {
+      name: (form.name.trim() || form.code.trim()),
+      species: form.species,
+      age: `${form.ageValue} ${form.ageUnit}`,
+      gender: form.gender,
+    };
+
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      const animal = await createAnimal(payload);
+      navigate(`/peternak/ternak/${animal.id}`);
+    } catch (err) {
+      setSubmitError(err?.message || "Gagal menyimpan data ternak.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,7 +88,7 @@ export default function AddAnimalPage() {
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Profil ternak</p>
           <h1 className="text-3xl font-bold leading-tight text-primary-dark md:text-4xl">Tambah ternak baru</h1>
           <p className="mt-3 text-sm leading-relaxed text-[#69736C]">
-            Data dasar ini mengikuti tabel `Animal` pada rancangan backend: nama, jenis, umur, dan jenis kelamin.
+            Data dasar ini akan disimpan ke backend: nama, jenis, umur, dan jenis kelamin.
           </p>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2">
@@ -141,7 +161,7 @@ export default function AddAnimalPage() {
 
             <fieldset className="md:col-span-2">
               <legend className="mb-3 text-sm font-bold text-primary-dark">Jenis kelamin</legend>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 {genderOptions.map((option) => (
                   <button
                     key={option.value}
@@ -155,6 +175,7 @@ export default function AddAnimalPage() {
                   </button>
                 ))}
               </div>
+              {errors.gender && <p className="mt-2 text-sm font-semibold text-[#912525]">{errors.gender}</p>}
             </fieldset>
 
             <div className="md:col-span-2">
@@ -192,9 +213,10 @@ export default function AddAnimalPage() {
             </button>
             <button
               type="submit"
-              className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark"
+              disabled={isSubmitting}
+              className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Simpan Ternak Demo
+              {isSubmitting ? "Menyimpan..." : "Simpan Ternak"}
             </button>
           </div>
         </form>
@@ -206,22 +228,14 @@ export default function AddAnimalPage() {
             Setelah disimpan, ternak ini akan muncul di daftar ternak dan bisa dipilih saat membuat laporan kondisi.
           </p>
 
-          {submitted && (
-            <div className="mt-5 rounded-2xl bg-brand-soft p-4 text-sm text-brand-green">
-              <p className="font-bold">Ternak demo siap disimpan</p>
-              <p className="mt-1 leading-relaxed">Integrasi penyimpanan ke backend bisa ditambahkan saat endpoint Animal sudah siap.</p>
-              <button
-                type="button"
-                onClick={() => navigate("/peternak/ternak")}
-                className="mt-4 min-h-11 w-full rounded-xl bg-brand-green px-4 text-sm font-bold text-white"
-              >
-                Kembali ke Daftar Ternak
-              </button>
+          {submitError && (
+            <div className="mt-5 rounded-2xl bg-[#FDEBEC] p-4 text-sm font-semibold text-[#912525]">
+              {submitError}
             </div>
           )}
 
           <p className="mt-5 text-xs leading-relaxed text-[#8D978F]">
-            Field waktu pembuatan dan pembaruan sebaiknya dibuat oleh backend.
+            Waktu pembuatan dan pembaruan dibuat otomatis oleh backend.
           </p>
         </aside>
       </div>
