@@ -90,30 +90,30 @@ export default function CaseStatus() {
                     setSelectedDoctorId(doctor.id);
                     setConsultMode(doctor.mode.includes("Chat") ? "Chat" : doctor.mode[0]);
                   }}
-                  className={`rounded-[2rem] border p-4 text-left transition-all md:p-5 ${
+                  className={`w-full rounded-[2rem] border p-4 text-left transition-all md:p-5 ${
                     selected ? "border-brand-green bg-brand-soft" : "border-[#E5EAE6] bg-white hover:border-[#B7DC72]"
                   }`}
                 >
-                  <div className="flex gap-4">
-                    <img src={doctor.photo} alt={`Foto demo ${doctor.name}`} className="h-24 w-24 shrink-0 rounded-2xl object-cover" />
+                  <div className="flex gap-3 sm:gap-4">
+                    <img src={doctor.photo} alt={`Foto demo ${doctor.name}`} className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-2xl object-cover animate-fade-in" />
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="mb-2 inline-flex rounded-full bg-[#FFF7D6] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">Data Demo</span>
-                          <h2 className="text-lg font-bold text-primary-dark">{doctor.name}</h2>
-                          <p className="mt-1 text-sm text-[#69736C]">{doctor.expertise}</p>
+                          <span className="mb-1.5 inline-flex rounded-full bg-[#FFF7D6] px-2.5 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-[#725300]">Data Demo</span>
+                          <h2 className="text-base sm:text-lg font-bold text-primary-dark truncate">{doctor.name}</h2>
+                          <p className="mt-0.5 text-xs sm:text-sm text-[#69736C] truncate">{doctor.expertise}</p>
                         </div>
-                        {selected && <span className="text-brand-green"><CheckIcon /></span>}
+                        {selected && <span className="text-brand-green shrink-0 mt-1"><CheckIcon /></span>}
                       </div>
 
-                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#505B53]">
-                        <span className="rounded-full bg-white px-3 py-1.5">{doctor.distance} km</span>
-                        <span className="rounded-full bg-white px-3 py-1.5">{doctor.eta}</span>
-                        <span className="rounded-full bg-white px-3 py-1.5">{doctor.available}</span>
+                      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] sm:text-xs font-bold text-[#505B53]">
+                        <span className="rounded-full bg-white px-2.5 py-1 border border-standard-border/20">{doctor.distance} km</span>
+                        <span className="rounded-full bg-white px-2.5 py-1 border border-standard-border/20">{doctor.eta}</span>
+                        <span className="rounded-full bg-white px-2.5 py-1 border border-standard-border/20 truncate max-w-[120px]">{doctor.available}</span>
                       </div>
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-relaxed text-[#69736C]">{doctor.reason}</p>
+                  <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#69736C] line-clamp-2 md:line-clamp-none">{doctor.reason}</p>
                 </button>
               );
             })}
