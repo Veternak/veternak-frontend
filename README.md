@@ -39,4 +39,4 @@ Veternak is a **Smart Livestock Health Response Platform** built specifically fo
 Based on the Veternak Design Guide v1.0, our UI prioritizes Clarity, Safety, and Trust. We avoid complex medical jargon and use a soft green color palette to reduce farmer anxiety during livestock emergencies.
 
 ---
-Team Veternak - Garuda Hacks 2024
+Team Veternak - Garuda Hacks 2026
