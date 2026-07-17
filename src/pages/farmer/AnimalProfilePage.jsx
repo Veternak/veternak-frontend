@@ -123,7 +123,7 @@ export default function AnimalProfilePage() {
     setError("");
     try {
       await deleteAnimal(animalId);
-      navigate("/peternak/ternak");
+      navigate("/peternak/dashboard");
     } catch (err) {
       setError(err?.message || "Gagal menghapus data ternak.");
     } finally {

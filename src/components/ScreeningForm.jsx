@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { buildDiagnosisPayload, diagnoseAnimal } from "../services/aiDiagnosisService";
-import { createAnimal, createConsultation, getAnimalById, getVets } from "../services/farmerCoreService";
+import { createAnimal, createConsultation, getAnimalById, getAnimals, getVets } from "../services/farmerCoreService";
 
 const animals = [
   {
@@ -114,10 +114,9 @@ const fallbackDoctors = [
 
 const steps = [
   "Pilih ternak",
-  "Ceritakan kondisi",
-  "Kondisi penting",
-  "Foto",
-  "Periksa laporan",
+  "Gejala ternak",
+  "Catatan tambahan",
+  "Hasil & Kirim Laporan",
 ];
 
 function CheckIcon() {
@@ -141,27 +140,33 @@ export default function ScreeningForm() {
   const [searchParams] = useSearchParams();
   const animalIdFromQuery = searchParams.get("animalId");
   const [step, setStep] = useState(0);
-  const [selectedAnimal, setSelectedAnimal] = useState(animals[0].id);
+  
+  // States for actual animal list from backend
+  const [myAnimals, setMyAnimals] = useState([]);
+  const [isLoadingAnimals, setIsLoadingAnimals] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState("");
+  const [selectedBackendAnimal, setSelectedBackendAnimal] = useState(null);
+  
   const [species, setSpecies] = useState("sapi");
   const [animalAge, setAnimalAge] = useState(18);
-  const [animalCode, setAnimalCode] = useState("Spi-001");
+  const [animalCode, setAnimalCode] = useState("");
   const [animalStatus, setAnimalStatus] = useState("baru_melahirkan");
   const [isProducingMilk, setIsProducingMilk] = useState("Ya");
   const [recentlyGaveBirth, setRecentlyGaveBirth] = useState("Ya");
   const [startedAt, setStartedAt] = useState("Sejak pagi");
-  const [story, setStory] = useState("Sapi saya sejak pagi tidak mau makan, terlihat lemas, dan napasnya lebih cepat.");
+  const [story, setStory] = useState("");
   const [symptomAnswers, setSymptomAnswers] = useState({
-    lemas: "Mungkin",
-    nafsu_makan_turun: "Ya",
-    produksi_susu_turun: "Ya",
-    batuk_ingus: "Mungkin",
+    lemas: "Tidak",
+    nafsu_makan_turun: "Tidak",
+    produksi_susu_turun: "Tidak",
+    batuk_ingus: "Tidak",
     sesak_napas: "Tidak",
-    air_liur_berlebihan: "Ya",
-    luka_mulut: "Mungkin",
-    diare: "Mungkin",
-    perut_kembung: "Ya",
-    pincang_sulit_berdiri: "Ya",
-    bengkak_luka_benjolan: "Ya",
+    air_liur_berlebihan: "Tidak",
+    luka_mulut: "Tidak",
+    diare: "Tidak",
+    perut_kembung: "Tidak",
+    pincang_sulit_berdiri: "Tidak",
+    bengkak_luka_benjolan: "Tidak",
     ternak_lain_sakit_mirip: "Tidak",
   });
   const [photoCount, setPhotoCount] = useState(1);
@@ -171,7 +176,6 @@ export default function ScreeningForm() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [diagnosisResult, setDiagnosisResult] = useState(null);
   const [diagnosisError, setDiagnosisError] = useState("");
-  const [selectedBackendAnimal, setSelectedBackendAnimal] = useState(null);
   const [animalLoadError, setAnimalLoadError] = useState("");
   const lastPredictionKeyRef = useRef("");
 
@@ -193,32 +197,53 @@ export default function ScreeningForm() {
   }, [backendVets]);
 
   const animal = useMemo(
-    () => selectedBackendAnimal || animals.find((item) => item.id === selectedAnimal) || animals[0],
-    [selectedAnimal, selectedBackendAnimal],
+    () => selectedBackendAnimal || { id: "new", name: animalCode || "Ternak Baru", species: species || "Sapi" },
+    [selectedAnimal, selectedBackendAnimal, animalCode, species],
   );
 
+  // Fetch list of livestock owned by the farmer
   useEffect(() => {
-    if (!animalIdFromQuery) return;
-
-    let isMounted = true;
-    setAnimalLoadError("");
-    getAnimalById(animalIdFromQuery)
-      .then((response) => {
-        if (!isMounted) return;
-        const backendAnimal = normalizeAnimal(response);
-        setSelectedBackendAnimal(backendAnimal);
-        setSpecies(speciesToModelValue(backendAnimal?.species));
-        setAnimalAge(getAgeInMonths(backendAnimal?.age));
-        setAnimalCode(backendAnimal?.name || getAnimalCode(backendAnimal));
+    setIsLoadingAnimals(true);
+    getAnimals()
+      .then((res) => {
+        const list = res?.data?.animals || [];
+        setMyAnimals(list);
+        
+        if (animalIdFromQuery) {
+          const found = list.find(a => String(a.id) === String(animalIdFromQuery));
+          if (found) {
+            setSelectedBackendAnimal(found);
+            setSelectedAnimal(String(found.id));
+            setSpecies(speciesToModelValue(found.species));
+            setAnimalAge(getAgeInMonths(found.age));
+            setAnimalCode(found.name || getAnimalCode(found));
+          }
+        } else if (list.length > 0) {
+          setSelectedBackendAnimal(list[0]);
+          setSelectedAnimal(String(list[0].id));
+          setSpecies(speciesToModelValue(list[0].species));
+          setAnimalAge(getAgeInMonths(list[0].age));
+          setAnimalCode(list[0].name || getAnimalCode(list[0]));
+        }
       })
       .catch((error) => {
-        if (isMounted) setAnimalLoadError(error?.message || "Gagal memuat data ternak terpilih.");
+        setAnimalLoadError("Gagal memuat daftar ternak Anda dari backend.");
+      })
+      .finally(() => {
+        setIsLoadingAnimals(false);
       });
-
-    return () => {
-      isMounted = false;
-    };
   }, [animalIdFromQuery]);
+
+  const handleAnimalChange = (animalId) => {
+    setSelectedAnimal(animalId);
+    const found = myAnimals.find(a => String(a.id) === String(animalId));
+    if (found) {
+      setSelectedBackendAnimal(found);
+      setSpecies(speciesToModelValue(found.species));
+      setAnimalAge(getAgeInMonths(found.age));
+      setAnimalCode(found.name || getAnimalCode(found));
+    }
+  };
 
   useEffect(() => {
     getVets()
@@ -238,9 +263,10 @@ export default function ScreeningForm() {
     setSymptomAnswers((current) => ({ ...current, [key]: value }));
   };
 
-  const canContinue = step !== 1 || story.trim().length > 12;
+  const canContinue = true;
   const positiveSymptomCount = Object.values(symptomAnswers).filter((value) => value === "Ya").length;
   const possibleSymptomCount = Object.values(symptomAnswers).filter((value) => value === "Mungkin").length;
+  
   const diagnosisPayload = buildDiagnosisPayload({
     species,
     animalAge,
@@ -248,6 +274,7 @@ export default function ScreeningForm() {
     recentlyGaveBirth,
     symptomAnswers,
   });
+  
   const diagnosisData = diagnosisResult?.data ?? null;
 
   const requestDiagnosis = async () => {
@@ -347,7 +374,7 @@ export default function ScreeningForm() {
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Laporan kondisi</p>
             <h1 className="text-3xl font-bold leading-tight text-primary-dark md:text-4xl">Laporkan gejala ternak</h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#69736C] md:text-base">
-              Isi informasi utama dalam beberapa langkah. Hasilnya membantu menyusun penilaian awal dan ringkasan untuk dokter hewan.
+              Lengkapi rincian kondisi ternak Anda untuk dianalisis oleh asisten AI Veternak dan dikirimkan ke dokter hewan.
             </p>
           </div>
           <div className="rounded-2xl bg-brand-soft px-4 py-3 text-sm font-bold text-brand-green">
@@ -359,7 +386,7 @@ export default function ScreeningForm() {
           <div className="h-2 overflow-hidden rounded-full bg-[#E5EAE6]">
             <div className="h-full rounded-full bg-brand-lime transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
-          <div className="mt-3 hidden grid-cols-5 gap-2 text-xs font-bold text-[#69736C] md:grid">
+          <div className="mt-3 hidden grid-cols-4 gap-2 text-xs font-bold text-[#69736C] md:grid text-center">
             {steps.map((item, index) => (
               <span key={item} className={index <= step ? "text-brand-green" : ""}>{item}</span>
             ))}
@@ -371,74 +398,61 @@ export default function ScreeningForm() {
         <div className="rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm md:p-8">
           {step === 0 && (
             <div>
-              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Lengkapi data awal ternak</h2>
+              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Pilih ternak yang ingin dilaporkan</h2>
               <p className="mb-6 text-sm text-[#69736C]">
-                {selectedBackendAnimal
-                  ? "Data ternak sudah diambil dari profil, jadi Anda tinggal melengkapi kondisi dan gejalanya."
-                  : "Bagian ini mengikuti input model screening agar data penting tidak terlewat."}
+                Silakan pilih hewan ternak Anda yang menunjukkan gejala sakit dari menu dropdown di bawah.
               </p>
               {animalLoadError && (
                 <div className="mb-5 rounded-2xl border border-[#F6CACA] bg-[#FDEBEC] p-4 text-sm font-semibold text-[#912525]">
                   {animalLoadError}
                 </div>
               )}
-              <div className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-4 text-sm leading-6 text-[#69736C]">
-                {selectedBackendAnimal
-                  ? `Ternak terpilih: ${selectedBackendAnimal.name} (${getAnimalCode(selectedBackendAnimal)}). Data profil tidak dibuat ulang saat laporan dikirim.`
-                  : "Masukkan data ternak yang ingin dilaporkan. Data ini akan dibuat sebagai profil ternak saat laporan dikirim."}
-              </div>
 
               <div className="mt-8 grid gap-5 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalDropdown">
+                    Pilih Ternak Anda
+                  </label>
+                  {isLoadingAnimals ? (
+                    <p className="text-sm text-gray-500 font-semibold">Memuat daftar hewan...</p>
+                  ) : myAnimals.length === 0 ? (
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+                      Anda belum memiliki hewan ternak di sistem. Silakan tambahkan data hewan ternak terlebih dahulu di Beranda.
+                    </div>
+                  ) : (
+                    <select
+                      id="animalDropdown"
+                      value={selectedAnimal}
+                      onChange={(e) => handleAnimalChange(e.target.value)}
+                      className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                    >
+                      {myAnimals.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} - {a.species} ({a.age || "Umur tidak diset"})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
                 <div>
                   <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="species">Jenis ternak</label>
-                  <select
+                  <input
                     id="species"
-                    value={species}
-                    disabled={Boolean(selectedBackendAnimal)}
-                    onChange={(event) => setSpecies(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-                  >
-                    <option value="sapi">Sapi</option>
-                    <option value="kerbau">Kerbau</option>
-                    <option value="kambing">Kambing</option>
-                    <option value="domba">Domba</option>
-                  </select>
+                    type="text"
+                    value={species.toUpperCase()}
+                    disabled
+                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-[#F8FAF8] px-4 text-sm font-bold text-[#505B53] outline-none cursor-not-allowed"
+                  />
                 </div>
                 <div>
                   <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="age">Umur ternak (bulan)</label>
                   <input
                     id="age"
                     type="number"
-                    min="0"
                     value={animalAge}
-                    disabled={Boolean(selectedBackendAnimal)}
-                    onChange={(event) => setAnimalAge(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                    disabled
+                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-[#F8FAF8] px-4 text-sm font-bold text-[#505B53] outline-none cursor-not-allowed"
                   />
-                </div>
-                <div>
-                  <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalCode">Nama ternak</label>
-                  <input
-                    id="animalCode"
-                    type="text"
-                    value={animalCode}
-                    disabled={Boolean(selectedBackendAnimal)}
-                    onChange={(event) => setAnimalCode(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none disabled:bg-[#F8FAF8] focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-                  />
-                </div>
-                <div>
-                  <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="animalStatus">Status ternak</label>
-                  <select
-                    id="animalStatus"
-                    value={animalStatus}
-                    onChange={(event) => setAnimalStatus(event.target.value)}
-                    className="h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-                  >
-                    {animalStatuses.map((status) => (
-                      <option key={status.value} value={status.value}>{status.label}</option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
@@ -471,41 +485,8 @@ export default function ScreeningForm() {
 
           {step === 1 && (
             <div>
-              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Ceritakan kondisi dengan bahasa sehari-hari</h2>
-              <p className="mb-6 text-sm text-[#69736C]">Tulis apa yang Anda lihat. Informasi ini tidak akan diubah otomatis tanpa Anda periksa.</p>
-              <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="startedAt">Kapan mulai terlihat?</label>
-              <select
-                id="startedAt"
-                value={startedAt}
-                onChange={(event) => setStartedAt(event.target.value)}
-                className="mb-6 h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-              >
-                <option>Baru saja</option>
-                <option>Sejak pagi</option>
-                <option>Sejak kemarin</option>
-                <option>Lebih dari 2 hari</option>
-                <option>Tidak tahu pasti</option>
-              </select>
-              <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="story">Catatan kondisi</label>
-              <textarea
-                id="story"
-                value={story}
-                onChange={(event) => setStory(event.target.value)}
-                rows={7}
-                className="min-h-40 w-full rounded-2xl border border-[#D4DCD6] bg-white p-4 text-base leading-relaxed outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
-                placeholder="Contoh: Sapi saya sejak pagi tidak mau makan, terlihat lemas, dan napasnya lebih cepat."
-              />
-              <div className="mt-3 flex justify-between text-xs text-[#8D978F]">
-                <span>Anda tetap bisa melanjutkan meskipun belum tahu semua detail.</span>
-                <span>{story.length}/500</span>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div>
-              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Jawab pertanyaan gejala utama</h2>
-              <p className="mb-6 text-sm text-[#69736C]">Pertanyaan ini dibuat sama dengan form screening ML: Tidak, Mungkin, atau Ya.</p>
+              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Pilih gejala yang dialami ternak</h2>
+              <p className="mb-6 text-sm text-[#69736C]">Pilihlah kondisi yang sesuai berdasarkan pengamatan Anda pada hewan ternak saat ini.</p>
               <div className="grid gap-4 md:grid-cols-2">
                 {symptomQuestions.map((item) => {
                   const selected = symptomAnswers[item.key];
@@ -536,108 +517,114 @@ export default function ScreeningForm() {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 2 && (
             <div>
-              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Tambahkan foto kondisi ternak</h2>
-              <p className="mb-6 text-sm text-[#69736C]">Foto membantu dokter memahami kondisi. Foto tidak digunakan untuk diagnosis otomatis.</p>
-              <div className="rounded-[2rem] border-2 border-dashed border-[#D4DCD6] bg-[#F8FAF8] p-8 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">+</div>
-                <h3 className="text-lg font-bold text-primary-dark">Upload foto demo</h3>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-[#69736C]">Untuk MVP ini, tombol menambah jumlah foto demo. Pada backend nanti, area ini dapat diganti dengan upload asli.</p>
+              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Catatan kondisi tambahan & Foto</h2>
+              <p className="mb-6 text-sm text-[#69736C]">Tuliskan catatan tambahan mengenai kondisi hewan secara detail untuk melengkapi laporan.</p>
+              
+              <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="startedAt">Kapan gejala mulai terlihat?</label>
+              <select
+                id="startedAt"
+                value={startedAt}
+                onChange={(event) => setStartedAt(event.target.value)}
+                className="mb-6 h-[52px] w-full rounded-xl border border-[#D4DCD6] bg-white px-4 text-sm outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+              >
+                <option>Baru saja</option>
+                <option>Sejak pagi</option>
+                <option>Sejak kemarin</option>
+                <option>Lebih dari 2 hari</option>
+                <option>Tidak tahu pasti</option>
+              </select>
+
+              <label className="mb-3 block text-sm font-bold text-primary-dark" htmlFor="story">Catatan tambahan</label>
+              <textarea
+                id="story"
+                value={story}
+                onChange={(event) => setStory(event.target.value)}
+                rows={5}
+                className="min-h-32 w-full rounded-2xl border border-[#D4DCD6] bg-white p-4 text-base leading-relaxed outline-none focus:border-brand-green focus:ring-4 focus:ring-[#D8EDAC]"
+                placeholder="Masukkan catatan klinis atau kelakuan aneh ternak di sini..."
+              />
+              <div className="mt-2 mb-6 flex justify-between text-xs text-[#8D978F]">
+                <span>Tuliskan catatan klinis tambahan bila diperlukan.</span>
+                <span>{story.length}/500</span>
+              </div>
+
+              <h3 className="mb-3 text-lg font-bold text-primary-dark">Foto Pendukung (Opsional)</h3>
+              <div className="rounded-[2rem] border-2 border-dashed border-[#D4DCD6] bg-[#F8FAF8] p-6 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-sm cursor-pointer">+</div>
+                <h4 className="text-sm font-bold text-primary-dark">Simulasi Upload Foto</h4>
+                <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-[#69736C]">Klik untuk menambah jumlah demo foto yang dilampirkan.</p>
                 <button
                   type="button"
                   onClick={() => setPhotoCount((count) => Math.min(count + 1, 3))}
-                  className="mt-5 rounded-xl bg-brand-green px-5 py-3 text-sm font-bold text-white"
+                  className="mt-4 rounded-xl bg-brand-green px-4 py-2 text-xs font-bold text-white"
                 >
                   Tambah Foto Demo
                 </button>
               </div>
-              <div className="mt-5 grid grid-cols-3 gap-3">
+              <div className="mt-4 grid grid-cols-3 gap-3">
                 {Array.from({ length: photoCount }).map((_, index) => (
                   <div key={index} className="aspect-square rounded-2xl border border-[#E5EAE6] bg-brand-soft p-3">
-                    <div className="flex h-full items-center justify-center rounded-xl bg-white text-sm font-bold text-brand-green">Foto {index + 1}</div>
+                    <div className="flex h-full items-center justify-center rounded-xl bg-white text-xs font-bold text-brand-green">Foto {index + 1}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <div>
-              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Periksa laporan sebelum dikirim</h2>
-              <p className="mb-6 text-sm text-[#69736C]">Ringkasan ini disusun dari jawaban Anda. Dokter tetap menjadi pihak yang menilai kondisi medis.</p>
+              <h2 className="mb-2 text-2xl font-bold text-primary-dark">Hasil Prediksi & Kirim Laporan</h2>
+              <p className="mb-6 text-sm text-[#69736C]">Hasil diagnosis prediksi AI siap ditampilkan. Pilih dokter hewan untuk mengirim konsultasi resmi.</p>
 
-              <div className="space-y-5">
-                <section className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-orange-600">Prediksi penyakit ternak</p>
-                  <h3 className="text-3xl font-bold text-primary-dark">
-                    {isSubmittingReport ? "Memuat prediksi..." : diagnosisData?.diseaseName || "Belum ada prediksi"}
-                  </h3>
-                  {diagnosisData?.simpleDiseaseName && (
-                    <p className="mt-2 text-base font-bold text-orange-700">{diagnosisData.simpleDiseaseName}</p>
-                  )}
-                  <p className="mt-3 text-sm leading-relaxed text-[#505B53]">
-                    {diagnosisData?.description || (isSubmittingReport ? "Backend sedang menghitung prediksi dari gejala yang Anda isi." : "Prediksi belum tersedia. Pastikan sudah login dan backend berjalan.")}
-                  </p>
-                  {diagnosisData?.urgencyLevel && (
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#505B53]">
-                      <span className="rounded-full bg-white px-3 py-1.5">Urgensi: {diagnosisData.urgencyLevel}</span>
-                      <span className="rounded-full bg-white px-3 py-1.5">Sumber: {diagnosisData.predictionSource}</span>
+              <div className="space-y-6">
+                {diagnosisData ? (
+                  <section className="rounded-3xl border border-brand-green/20 bg-brand-soft/30 p-6 shadow-sm">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-3">
+                      Hasil Prediksi Asisten Veternak AI
+                    </p>
+                    <h3 className="text-2xl font-extrabold text-primary-dark">
+                      {diagnosisData.diseaseName}
+                    </h3>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                        diagnosisData.urgencyLevel === 'HIGH' 
+                          ? 'bg-rose-100 text-rose-800' 
+                          : diagnosisData.urgencyLevel === 'MEDIUM' 
+                            ? 'bg-amber-100 text-amber-800' 
+                            : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        Urgensi: {diagnosisData.urgencyLevel === 'HIGH' ? 'TINGGI' : diagnosisData.urgencyLevel === 'MEDIUM' ? 'SEDANG' : 'RENDAH'}
+                      </span>
                     </div>
-                  )}
-                  <p className="mt-4 text-xs font-semibold text-orange-700">
-                    Hasil ini adalah prediksi awal berdasarkan gejala, bukan diagnosis final dokter hewan.
-                  </p>
-                </section>
 
-                {diagnosisData?.predictions?.length > 0 && (
-                  <section className="rounded-2xl border border-[#E5EAE6] p-5">
-                    <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Kemungkinan penyakit teratas</p>
-                    <div className="grid gap-3">
-                      {diagnosisData.predictions.slice(0, 3).map((item, index) => (
-                        <div key={item.id || item.name} className="rounded-xl bg-[#F8FAF8] p-4">
-                          <div className="flex items-start gap-3">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand-green">{index + 1}</span>
-                            <div>
-                              <h4 className="font-bold text-primary-dark">{item.name}</h4>
-                              <p className="mt-1 text-sm leading-6 text-[#69736C]">{item.description}</p>
-                              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-orange-700">Urgensi {item.urgencyLevel}</p>
-                            </div>
+                    <div className="mt-5 space-y-4">
+                      <div className="rounded-2xl bg-white p-5 border border-gray-100">
+                        <h4 className="font-bold text-primary-dark mb-2 font-black">Deskripsi Penyakit</h4>
+                        <p className="text-sm leading-relaxed text-[#505B53]">
+                          {diagnosisData.description}
+                        </p>
+                      </div>
+
+                      {diagnosisData.aiDiagnosisSummary && (
+                        <div className="rounded-2xl bg-white p-5 border border-gray-100">
+                          <h4 className="font-bold text-primary-dark mb-3 font-black">Detail Deskriptif Diagnosis & Penanganan</h4>
+                          <div className="whitespace-pre-wrap text-sm leading-relaxed text-[#505B53] font-medium font-sans">
+                            {diagnosisData.aiDiagnosisSummary}
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </section>
-                )}
-
-                <section className="rounded-2xl border border-[#E5EAE6] p-5">
-                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan kasus</p>
-                  <dl className="grid gap-3 text-sm md:grid-cols-2">
-                    <div><dt className="font-bold text-primary-dark">Ternak</dt><dd className="text-[#69736C]">{animal.name} - {animal.species}</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Kode ternak</dt><dd className="text-[#69736C]">{selectedBackendAnimal ? getAnimalCode(selectedBackendAnimal) : "Dibuat otomatis setelah laporan dikirim"}</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Input model</dt><dd className="text-[#69736C]">{species}, {animalAge} bulan, {animalStatus}</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Mulai terlihat</dt><dd className="text-[#69736C]">{startedAt}</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Foto</dt><dd className="text-[#69736C]">{photoCount} foto demo</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Risiko penularan awal</dt><dd className="text-[#69736C]">Sedang, perlu pemisahan sementara</dd></div>
-                    <div><dt className="font-bold text-primary-dark">Gejala model</dt><dd className="text-[#69736C]">{positiveSymptomCount} Ya, {possibleSymptomCount} Mungkin</dd></div>
-                  </dl>
-                  <div className="mt-4">
-                    <p className="font-bold text-primary-dark">Catatan asli</p>
-                    <p className="mt-2 rounded-xl bg-[#F8FAF8] p-4 text-sm leading-relaxed text-[#505B53]">{story}</p>
+                ) : isSubmittingReport ? (
+                  <div className="rounded-2xl bg-brand-soft p-8 text-center text-sm font-semibold text-brand-green">
+                    Menghitung hasil prediksi berdasarkan model screening AI...
                   </div>
-                  <details className="mt-4 rounded-xl bg-[#F8FAF8] p-4">
-                    <summary className="cursor-pointer text-sm font-bold text-brand-green">Data input yang dikirim ke model</summary>
-                    <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-xs leading-relaxed text-[#505B53]">
-                      {JSON.stringify(diagnosisPayload, null, 2)}
-                    </pre>
-                  </details>
-                </section>
-
-                {diagnosisData?.aiDiagnosisSummary && (
-                  <section className="rounded-2xl border border-[#E5EAE6] p-5">
-                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan penilaian awal</p>
-                    <pre className="whitespace-pre-wrap text-sm leading-6 text-[#505B53]">{diagnosisData.aiDiagnosisSummary}</pre>
-                  </section>
+                ) : (
+                  <div className="rounded-2xl bg-[#FDEBEC] p-5 text-center text-sm font-semibold text-[#912525]">
+                    Prediksi tidak dapat dimuat. Silakan periksa koneksi Anda atau coba lagi.
+                  </div>
                 )}
 
                 {diagnosisError && (
@@ -647,25 +634,21 @@ export default function ScreeningForm() {
                 )}
 
                 <section className="rounded-2xl border border-[#E5EAE6] p-5">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Tindakan aman sementara</p>
-                  <div className="grid gap-3">
-                    {["Pisahkan dari kelompok sementara.", "Pastikan air bersih tersedia.", "Catat perubahan kondisi setiap 30-60 menit."].map((item) => (
-                      <div key={item} className="flex gap-3 rounded-xl bg-brand-soft p-3 text-sm font-semibold text-primary-dark">
-                        <span className="text-brand-green"><CheckIcon /></span>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 rounded-xl bg-[#FDEBEC] p-4 text-sm font-semibold text-[#912525]">
-                    Jangan memberi obat, antibiotik, atau dosis apa pun tanpa arahan dokter hewan.
-                  </div>
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Ringkasan kasus</p>
+                  <dl className="grid gap-3 text-sm md:grid-cols-2">
+                    <div><dt className="font-bold text-primary-dark">Ternak</dt><dd className="text-[#69736C]">{animal.name} - {animal.species}</dd></div>
+                    <div><dt className="font-bold text-primary-dark">Kode ternak</dt><dd className="text-[#69736C]">{selectedBackendAnimal ? getAnimalCode(selectedBackendAnimal) : "Dibuat otomatis setelah laporan"}</dd></div>
+                    <div><dt className="font-bold text-primary-dark">Input model</dt><dd className="text-[#69736C]">{species}, {animalAge} bulan</dd></div>
+                    <div><dt className="font-bold text-primary-dark">Mulai terlihat</dt><dd className="text-[#69736C]">{startedAt}</dd></div>
+                    <div><dt className="font-bold text-primary-dark">Gejala positif</dt><dd className="text-[#69736C]">{positiveSymptomCount} Ya, {possibleSymptomCount} Mungkin</dd></div>
+                  </dl>
+                  {story && (
+                    <div className="mt-4">
+                      <p className="font-bold text-primary-dark">Catatan tambahan</p>
+                      <p className="mt-2 rounded-xl bg-[#F8FAF8] p-4 text-sm leading-relaxed text-[#505B53]">{story}</p>
+                    </div>
+                  )}
                 </section>
-
-                {consultationResult?.consultation && (
-                  <section className="rounded-2xl border border-[#CFE8D4] bg-[#EEF8F0] p-5 text-sm font-semibold text-[#1D5937]">
-                    Konsultasi berhasil dibuat. ID kasus: #{consultationResult.consultation.id}
-                  </section>
-                )}
 
                 <section>
                   <h3 className="mb-4 text-xl font-bold text-primary-dark">Pilih dokter hewan</h3>
@@ -725,7 +708,7 @@ export default function ScreeningForm() {
             </div>
             <div>
               <p className="font-bold text-primary-dark">Data model</p>
-              <p className="mt-1 text-[#69736C]">{species}, {animalAge} bulan, {animalStatus}</p>
+              <p className="mt-1 text-[#69736C]">{species}, {animalAge} bulan</p>
             </div>
             <div>
               <p className="font-bold text-primary-dark">Foto</p>
