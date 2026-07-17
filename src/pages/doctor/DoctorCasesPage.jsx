@@ -29,7 +29,7 @@ export default function DoctorCasesPage() {
     getVetConsultations()
       .then((response) => {
         if (!isMounted) return
-        setRawCases(response?.data?.consultations || response || [])
+        setRawCases(response?.data?.cases || response?.data?.consultations || response || [])
         setError('')
       })
       .catch((err) => {

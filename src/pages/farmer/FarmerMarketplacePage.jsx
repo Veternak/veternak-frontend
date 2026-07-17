@@ -1,97 +1,5 @@
 import { useMemo, useState } from "react";
-
-const categories = ["Semua", "Obat & vitamin", "Pakan", "Alat kandang", "Aksesori"];
-
-const products = [
-  {
-    id: "MED-001",
-    name: "Vitamin Ruminansia Harian",
-    category: "Obat & vitamin",
-    price: "Rp48.000",
-    unit: "botol 250 ml",
-    stock: "Stok tersedia",
-    tag: "Gunakan sesuai arahan",
-    image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&q=80&w=400",
-    description: "Suplemen pendukung kondisi umum sapi dan kambing. Bukan pengganti pemeriksaan dokter.",
-  },
-  {
-    id: "MED-002",
-    name: "Elektrolit Ternak",
-    category: "Obat & vitamin",
-    price: "Rp36.000",
-    unit: "sachet 100 g",
-    stock: "Stok terbatas",
-    tag: "Konsultasikan dulu",
-    image: "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?auto=format&fit=crop&q=80&w=400",
-    description: "Pendukung cairan tubuh saat ternak perlu pemantauan. Ikuti arahan tenaga kesehatan hewan.",
-  },
-  {
-    id: "FEED-001",
-    name: "Konsentrat Sapi Potong",
-    category: "Pakan",
-    price: "Rp128.000",
-    unit: "karung 25 kg",
-    stock: "Stok tersedia",
-    tag: "Pakan",
-    image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&q=80&w=400",
-    description: "Pakan tambahan untuk sapi potong dengan kebutuhan energi lebih tinggi.",
-  },
-  {
-    id: "FEED-002",
-    name: "Mineral Block Kambing",
-    category: "Pakan",
-    price: "Rp22.000",
-    unit: "blok 1 kg",
-    stock: "Stok tersedia",
-    tag: "Mineral",
-    image: "https://images.unsplash.com/photo-1524024973431-2ad916746881?auto=format&fit=crop&q=80&w=400",
-    description: "Pendukung mineral harian untuk kambing dan domba.",
-  },
-  {
-    id: "TOOL-001",
-    name: "Termometer Digital Ternak",
-    category: "Alat kandang",
-    price: "Rp74.000",
-    unit: "1 unit",
-    stock: "Stok tersedia",
-    tag: "Alat pemeriksaan",
-    image: "https://images.unsplash.com/photo-1583912267550-d44c80b5916d?auto=format&fit=crop&q=80&w=400",
-    description: "Membantu peternak mencatat suhu saat membuat laporan kondisi.",
-  },
-  {
-    id: "TOOL-002",
-    name: "Sprayer Disinfektan",
-    category: "Alat kandang",
-    price: "Rp95.000",
-    unit: "kapasitas 2 liter",
-    stock: "Stok tersedia",
-    tag: "Biosecurity",
-    image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400",
-    description: "Alat bantu sanitasi area kandang dan perlengkapan.",
-  },
-  {
-    id: "ACC-001",
-    name: "Kalung ID Ternak",
-    category: "Aksesori",
-    price: "Rp18.000",
-    unit: "1 set",
-    stock: "Stok tersedia",
-    tag: "Identifikasi",
-    image: "https://images.unsplash.com/photo-1596733430284-f7437764b1a9?auto=format&fit=crop&q=80&w=400",
-    description: "Membantu membedakan ternak saat pencatatan profil dan laporan kondisi.",
-  },
-  {
-    id: "ACC-002",
-    name: "Sikat Perawatan Kandang",
-    category: "Aksesori",
-    price: "Rp32.000",
-    unit: "1 buah",
-    stock: "Stok tersedia",
-    tag: "Kebersihan",
-    image: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=400",
-    description: "Sikat kuat untuk membersihkan lantai kandang dan perlengkapan makan.",
-  },
-];
+import { marketplaceCategories, marketplaceProducts } from "../../data/marketplaceProducts";
 
 export default function FarmerMarketplacePage() {
   const [category, setCategory] = useState("Semua");
@@ -99,7 +7,7 @@ export default function FarmerMarketplacePage() {
   const [cartCount, setCartCount] = useState(0);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    return marketplaceProducts.filter((product) => {
       const matchesCategory = category === "Semua" || product.category === category;
       const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase())
         || product.description.toLowerCase().includes(query.toLowerCase());
@@ -126,7 +34,7 @@ export default function FarmerMarketplacePage() {
 
       <div className="mb-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {categories.map((item) => (
+          {marketplaceCategories.map((item) => (
             <button
               key={item}
               type="button"
