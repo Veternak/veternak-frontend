@@ -134,8 +134,8 @@ export default function FarmerHome({ onLapor }) {
       <section className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Beranda peternak</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight text-primary-dark md:text-4xl">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Beranda</p>
+            <h1 className="mt-1 text-2xl sm:text-4xl font-bold text-primary-dark">
               Selamat datang, <span className="text-brand-green">{farmerName}</span>
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#69736C]">
@@ -152,11 +152,12 @@ export default function FarmerHome({ onLapor }) {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      {/* 2. STATS - Fixed overflow by using w-full */}
+      <section className="grid grid-cols-3 gap-2 sm:gap-4">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8D978F]">{item.label}</p>
-            <p className={`mt-3 inline-flex min-w-14 justify-center rounded-xl px-4 py-2 text-2xl font-black ${item.tone}`}>
+          <div key={item.label} className="rounded-2xl border border-[#E5EAE6] bg-white p-3 sm:p-5 shadow-sm text-center">
+            <p className="text-[9px] sm:text-xs font-bold uppercase text-[#8D978F]">{item.label}</p>
+            <p className={`mt-2 inline-flex w-full justify-center rounded-lg py-1 text-lg sm:text-2xl font-black ${item.tone}`}>
               {item.value}
             </p>
           </div>
@@ -164,18 +165,17 @@ export default function FarmerHome({ onLapor }) {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-primary-dark">Ternak Saya</h2>
-              <p className="mt-1 text-sm text-[#69736C]">Data diambil dari backend sesuai akun yang login.</p>
-            </div>
+        
+        {/* 3. TERNAK SAYA - The Slider Fix */}
+        <div className="rounded-3xl border border-[#E5EAE6] bg-white p-5 sm:p-8 shadow-sm min-w-0">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-primary-dark">Ternak Saya</h2>
             <button
               type="button"
               onClick={handleOpenModal}
               className="min-h-11 rounded-xl bg-brand-green px-5 text-sm font-bold text-white hover:scale-105 active:scale-95 transition-all"
             >
-              Tambah Ternak
+              + Tambah
             </button>
           </div>
 
@@ -232,18 +232,25 @@ export default function FarmerHome({ onLapor }) {
           )}
         </div>
 
-        <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
-          <h2 className="text-xl font-bold text-primary-dark">Aksi cepat</h2>
-          <div className="mt-5 grid gap-3">
-            <button type="button" onClick={onLapor} className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark">Buat Laporan</button>
-            <button type="button" onClick={() => navigate('/peternak/konsultasi')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Konsultasi</button>
-            <button type="button" onClick={() => navigate('/peternak/marketplace')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Toko</button>
+        {/* 4. AKSI CEPAT & CATATAN - Fixed with responsive grid */}
+        <aside className="space-y-4 min-w-0">
+          <div className="rounded-3xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
+            <h2 className="text-base font-bold text-primary-dark mb-4">Aksi cepat</h2>
+            <div className="grid grid-cols-3 sm:grid-cols-1 gap-2">
+              <button onClick={onLapor} className="h-10 rounded-xl bg-brand-lime text-[10px] sm:text-sm font-bold text-primary-dark">Lapor</button>
+              <button onClick={() => navigate('/peternak/konsultasi')} className="h-10 rounded-xl border border-gray-100 text-[10px] sm:text-sm font-bold text-brand-green">Konsultasi</button>
+              <button onClick={() => navigate('/peternak/marketplace')} className="h-10 rounded-xl border border-gray-100 text-[10px] sm:text-sm font-bold text-brand-green">Toko</button>
+            </div>
           </div>
-          <div className="mt-5 rounded-2xl bg-[#EAF3FB] p-4 text-sm text-[#205580]">
-            <p className="font-bold">Catatan</p>
-            <p className="mt-2 leading-relaxed">Data kasus aktif akan tampil setelah laporan berhasil dibuat dan dokter dipilih.</p>
+          
+          <div className="rounded-3xl bg-[#EAF3FB] p-5 border border-blue-50">
+            <p className="font-bold text-sm text-[#205580]">Catatan</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-[#205580]/70 truncate sm:whitespace-normal">
+              Status kasus aktif akan tampil di sini.
+            </p>
           </div>
         </aside>
+
       </section>
 
       {/* Tambah Ternak Modal */}
