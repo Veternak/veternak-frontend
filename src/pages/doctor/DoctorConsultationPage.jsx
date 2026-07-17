@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import CasePriorityBadge from '../../components/doctor/CasePriorityBadge'
 import DoctorSectionCard from '../../components/doctor/DoctorSectionCard'
@@ -13,6 +13,12 @@ export default function DoctorConsultationPage() {
   const [draft, setDraft] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const chatBottomRef = useRef(null)
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   // Fetch case detail & chat history
   useEffect(() => {
@@ -137,6 +143,7 @@ export default function DoctorConsultationPage() {
               )
             })
           )}
+          <div ref={chatBottomRef} />
         </div>
 
         <form className="mt-5 flex flex-col gap-3 md:flex-row animate-slide-up" onSubmit={handleSend}>

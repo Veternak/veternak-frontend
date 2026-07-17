@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getStoredFarmer } from "../services/farmerAuthService";
-import { getAnimals, getVets, createConsultation, requestVisit } from "../services/farmerCoreService";
+import { getAnimals, getVets, createConsultation, requestVisit, getConsultations, cancelConsultation } from "../services/farmerCoreService";
 
 const filters = ["Paling sesuai", "Terdekat", "Kunjungan"];
 
@@ -32,6 +32,7 @@ export default function CaseStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [activeConsultations, setActiveConsultations] = useState([]);
   const navigate = useNavigate();
   const farmer = getStoredFarmer();
 
@@ -51,9 +52,10 @@ export default function CaseStatus() {
           params.canVisit = true;
         }
 
-        const [vetResponse, animalResponse] = await Promise.all([
+        const [vetResponse, animalResponse, consultationResponse] = await Promise.all([
           getVets(params),
           getAnimals(),
+          getConsultations(),
         ]);
 
         if (!isMounted) return;
@@ -70,6 +72,9 @@ export default function CaseStatus() {
         if (fetchedAnimals.length > 0) {
           setSelectedAnimalId(String(fetchedAnimals[0].id));
         }
+
+        const fetchedConsultations = consultationResponse?.data?.consultations || [];
+        setActiveConsultations(fetchedConsultations);
       } catch (err) {
         if (isMounted) setError(err?.message || "Gagal memuat data konsultasi.");
       } finally {
@@ -118,12 +123,9 @@ export default function CaseStatus() {
           estimatedTime: new Date(Date.now() + 86400000).toISOString(),
           notes: "Permintaan kunjungan fisik lapangan.",
         });
-        alert("Konsultasi dan kunjungan lapangan berhasil dibuat!");
-      } else {
-        alert("Konsultasi chat berhasil dibuat!");
       }
 
-      navigate("/peternak/konsultasi");
+      navigate(`/peternak/konsultasi/${cons.id}/pembayaran`);
     } catch (err) {
       alert(err.message || "Gagal mengatur konsultasi.");
     }
@@ -153,6 +155,66 @@ export default function CaseStatus() {
           </div>
         </div>
       </div>
+
+      {/* ACTIVE CONSULTATIONS LIST SECTION */}
+      {!isLoading && activeConsultations.length > 0 && (
+        <div className="mb-8 rounded-[2rem] border border-brand-green/20 bg-brand-soft/20 p-6 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-4">Percakapan &amp; Konsultasi Aktif Anda</p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {activeConsultations.map((c) => {
+              const isPendingPayment = c.status === "PENDING";
+              return (
+                <div key={c.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-xs flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                        isPendingPayment ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {isPendingPayment ? "Menunggu Pembayaran" : "Konsultasi Aktif"}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-semibold">
+                        {new Date(c.createdAt).toLocaleDateString("id-ID")}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-primary-dark text-base">{c.vet?.name || "Dokter Hewan"}</h4>
+                    <p className="text-xs text-[#69736C] mt-0.5">Pasien: <span className="font-bold">{c.animal?.name || "Ternak"}</span></p>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => navigate(isPendingPayment ? `/peternak/konsultasi/${c.id}/pembayaran` : `/peternak/konsultasi/${c.id}`)}
+                      className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 ${
+                        isPendingPayment 
+                          ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                          : 'bg-brand-green hover:bg-brand-green/90 text-white'
+                      }`}
+                    >
+                      {isPendingPayment ? "Bayar" : "Buka Chat"}
+                    </button>
+                    {isPendingPayment && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm("Batalkan konsultasi ini?")) {
+                            try {
+                              await cancelConsultation(c.id);
+                              alert("Berhasil dibatalkan");
+                              window.location.reload();
+                            } catch (err) {
+                              alert(err.message || "Gagal membatalkan");
+                            }
+                          }
+                        }}
+                        className="px-3 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors"
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isLoading && (
         <p className="rounded-[2rem] border border-gray-100 bg-white p-8 text-center text-sm font-semibold text-gray-500 shadow-sm">

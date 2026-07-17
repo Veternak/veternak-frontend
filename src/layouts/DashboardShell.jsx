@@ -15,7 +15,7 @@ const icons = {
 
 const menuItems = [
   { id: 'dashboard', label: 'Beranda', icon: 'home', path: '/peternak/dashboard' },
-  { id: 'lapor', label: 'Lapor', icon: 'plus', isCta: true, path: '/peternak/lapor' },
+  { id: 'gejala', label: 'Input Gejala', icon: 'plus', isCta: true, path: '/peternak/lapor' },
   { id: 'konsultasi', label: 'Konsultasi', icon: 'chat', path: '/peternak/konsultasi' },
   { id: 'marketplace', label: 'Toko', icon: 'store', path: '/peternak/marketplace' },
   { id: 'akademi', label: 'Akademi', icon: 'book', path: '/peternak/akademi', desktopOnly: true },
