@@ -1,16 +1,42 @@
-# React + Vite
+# 🐄 Veternak Frontend
+### *Tanggap Lebih Cepat, Ternak Lebih Sehat.*
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Veternak adalah **Smart Livestock Health Response Platform** yang dirancang khusus untuk peternak sapi dan kambing di Indonesia. Menggunakan pendekatan **"Pastoral Health-Tech"**, platform ini menghubungkan gejala lapangan dengan penanganan medis profesional secara instan.
 
-Currently, two official plugins are available:
+## ✨ Fitur Unggulan
+- **Editorial Organic UI:** Antarmuka yang tenang, bersih, dan profesional sesuai standar industri modern.
+- **Mobile-First Experience:** Optimasi penuh untuk penggunaan di lapangan (Kandang) dengan Bottom Navigation dan Carousel slider.
+- **Smart Screening Flow:** Alur pelaporan multi-step yang memudahkan peternak memberikan data akurat untuk diolah AI.
+- **Explainable Triage:** Indikator urgensi transparan (Darurat, Mendesak, Pemantauan) lengkap dengan panduan tindakan aman.
+- **Real-time Consultation:** Chat terintegrasi dan pelacakan timeline kasus untuk memantau perjalanan dokter ke lokasi.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠 Tech Stack
+- **Framework:** React 19 (Vite)
+- **Styling:** Tailwind CSS v4 (Oxide Engine)
+- **Navigation:** React Router Dom
+- **Icons:** Custom SVG System (Zero-dependency)
+- **Animations:** Framer Motion
 
-## React Compiler
+## 🚀 Cara Menjalankan
+1. **Clone repositori:**
+   ```bash
+   git clone https://github.com/Veternak/veternak-frontend.git
+   cd veternak-frontend
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Install dependencies** (gunakan force jika ada konflik platform):
+   ```bash
+   npm install --force
+   ```
 
-## Expanding the ESLint configuration
+3. **Jalankan server lokal:**
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📐 Filosofi Desain
+
+Berdasarkan Veternak Design Guide v1.0, UI kami mengutamakan Kejelasan, Keamanan, dan Kepercayaan. Kami menghindari jargon medis rumit dan menggunakan palet warna hijau lembut untuk mengurangi kecemasan peternak saat terjadi darurat ternak.
+
+---
+Tim Veternak - Garuda Hacks 2024
