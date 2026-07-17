@@ -1,90 +1,146 @@
-import { useEffect, useState } from "react";
-import { apiRequest } from "../services/apiClient";
-import { getFarmerDisplayName } from "../services/farmerAuthService";
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getFarmerDisplayName } from '../services/farmerAuthService';
+import { getAnimals } from '../services/farmerCoreService';
+
+function getAnimalCode(animal) {
+  if (!animal?.id) return 'Kode otomatis';
+  return `TRN-${String(animal.id).slice(0, 8).toUpperCase()}`;
+}
+
+function getSpeciesIcon(species) {
+  const value = String(species || '').toLowerCase();
+  if (value.includes('kambing')) return 'K';
+  if (value.includes('domba')) return 'D';
+  if (value.includes('kerbau')) return 'B';
+  return 'S';
+}
+
 export default function FarmerHome({ onLapor }) {
+  const navigate = useNavigate();
   const farmerName = getFarmerDisplayName();
-  const [dashboard, setDashboard] = useState(null);
+  const [animals, setAnimals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    apiRequest("/farmer/dashboard", { method: "GET" })
-      .then((response) => setDashboard(response.data))
-      .catch(() => setDashboard(null));
+    getAnimals()
+      .then((response) => {
+        setAnimals(response?.data?.animals || []);
+        setError('');
+      })
+      .catch((err) => setError(err?.message || 'Gagal memuat data ternak.'))
+      .finally(() => setIsLoading(false));
   }, []);
-  const stats = [
-    { label: "Total", count: dashboard?.totalAnimals ?? 0, color: "text-brand-green", bg: "bg-brand-soft" },
-    { label: "Konsultasi", count: dashboard?.totalConsultations ?? 0, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Aktif", count: dashboard?.activeConsultations?.length ?? 0, color: "text-yellow-600", bg: "bg-yellow-50" },
-  ];
+
+  const stats = useMemo(() => [
+    { label: 'Ternak aktif', value: animals.length, tone: 'text-emerald-700 bg-emerald-50' },
+    { label: 'Kasus aktif', value: 0, tone: 'text-amber-700 bg-amber-50' },
+    { label: 'Perlu dokter', value: 0, tone: 'text-rose-700 bg-rose-50' },
+  ], [animals.length]);
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* 1. Header Greeting */}
-      <div className="flex justify-between items-end">
-        <div>
-          <p className="text-sm font-bold text-brand-green uppercase tracking-widest mb-1">Putra Mandiri Farm</p>
-          <h2 className="font-serif text-4xl text-primary-dark">Selamat Pagi,<br />{farmerName}!</h2>
-        </div>
-        <div className="hidden md:block text-right text-xs text-gray-400 font-medium">
-          <p>Sleman, Yogyakarta</p>
-          <p>24Ã‚Â°C Ã¢â‚¬Â¢ Cerah Berawan</p>
-        </div>
-      </div>
-
-      {/* 2. Quick Action CTA (The Big Green Button) */}
-      <div 
-        onClick={onLapor}
-        className="relative overflow-hidden bg-brand-green rounded-[2.5rem] p-8 text-white shadow-xl shadow-brand-green/20 cursor-pointer group hover:scale-[1.01] transition-all"
-      >
-        <div className="relative z-10">
-          <h3 className="text-2xl font-bold mb-2">Ada kendala pada ternak?</h3>
-          <p className="text-brand-soft/80 text-sm mb-6 max-w-xs">Laporkan gejala sekarang untuk mendapatkan screening AI dan bantuan dokter.</p>
-          <button className="bg-brand-lime text-primary-dark px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 group-hover:gap-4 transition-all">
-            Laporkan Gejala Sekarang 
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    <div className="mx-auto max-w-6xl space-y-6 pb-10">
+      <section className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green">Beranda peternak</p>
+            <h1 className="mt-2 text-3xl font-bold leading-tight text-primary-dark md:text-4xl">
+              Selamat datang, <span className="text-brand-green">{farmerName}</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#69736C]">
+              Pantau ternak, buat laporan kondisi, dan lanjutkan konsultasi dokter dari satu dashboard.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onLapor}
+            className="min-h-12 rounded-xl bg-brand-lime px-6 text-sm font-bold text-primary-dark"
+          >
+            Laporkan Gejala
           </button>
         </div>
-        {/* Decorative Cow Icon in background */}
-        <div className="absolute -right-4 -bottom-4 text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-700">
-           <svg width="160" height="160" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.5C22 12.5 20 10.5 16 10.5C12 10.5 10 12.5 10 12.5V15.5C10 15.5 12 17.5 16 17.5C20 17.5 22 15.5 22 15.5V12.5Z"/></svg>
-        </div>
-      </div>
+      </section>
 
-      {/* 3. Health Stats Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        {stats.map((s, i) => (
-          <div key={i} className={`${s.bg} p-6 rounded-[2rem] text-center border border-white/50 shadow-sm`}>
-            <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
-            <p className="text-[10px] font-bold uppercase tracking-tighter text-gray-500">{s.label}</p>
+      <section className="grid gap-4 md:grid-cols-3">
+        {stats.map((item) => (
+          <div key={item.label} className="rounded-2xl border border-[#E5EAE6] bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8D978F]">{item.label}</p>
+            <p className={`mt-3 inline-flex min-w-14 justify-center rounded-xl px-4 py-2 text-2xl font-black ${item.tone}`}>
+              {item.value}
+            </p>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* 4. Active Case Alert (Context-Aware) */}
-      <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 shadow-sm flex items-center gap-4">
-        <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
-           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div className="flex-grow">
-          <p className="text-[10px] font-bold text-orange-600 uppercase">Update Kasus #VT-8821</p>
-          <h4 className="text-sm font-bold text-primary-dark">Dokter sedang menuju lokasi</h4>
-        </div>
-        <button className="text-brand-green text-xs font-bold px-4 py-2 bg-brand-soft rounded-lg">Lihat</button>
-      </div>
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="rounded-[2rem] border border-[#E5EAE6] bg-white p-6 shadow-sm md:p-8">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-primary-dark">Ternak Saya</h2>
+              <p className="mt-1 text-sm text-[#69736C]">Data diambil dari backend sesuai akun yang login.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/peternak/ternak/tambah')}
+              className="min-h-11 rounded-xl bg-brand-green px-5 text-sm font-bold text-white"
+            >
+              Tambah Ternak
+            </button>
+          </div>
 
-      {/* 5. Recommended Academy (Editorial snippet) */}
-      <div className="pt-4">
-        <h4 className="text-lg font-bold text-primary-dark mb-4">Tips Untuk Anda</h4>
-        <div className="bg-[#FBF9EE] rounded-[2.5rem] p-6 flex gap-6 items-center border border-[#EFE9D5]">
-          <div className="flex-grow">
-            <span className="text-[10px] font-bold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded uppercase">Biosecurity</span>
-            <h5 className="font-serif text-xl text-primary-dark mt-2 mb-2 leading-tight">Pentingnya Sanitasi Kandang Pasca Melahirkan</h5>
-            <p className="text-xs text-gray-500">4 Menit Baca Ã¢â‚¬Â¢ Oleh drh. Siti</p>
-          </div>
-          <div className="w-20 h-20 bg-gray-200 rounded-2xl overflow-hidden shrink-0">
-             <img src="https://images.unsplash.com/photo-1594140733592-2374662df94d?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" />
-          </div>
+          {isLoading && <p className="rounded-2xl bg-[#F8FAF8] p-5 text-sm font-semibold text-[#69736C]">Memuat data ternak...</p>}
+          {!isLoading && error && <p className="rounded-2xl bg-[#FDEBEC] p-5 text-sm font-semibold text-[#912525]">{error}</p>}
+          {!isLoading && !error && animals.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-[#D4DCD6] bg-[#F8FAF8] p-8 text-center">
+              <h3 className="text-lg font-bold text-primary-dark">Belum ada ternak</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#69736C]">Tambahkan ternak pertama agar bisa dipakai saat membuat laporan kondisi.</p>
+              <button
+                type="button"
+                onClick={() => navigate('/peternak/ternak/tambah')}
+                className="mt-5 rounded-xl bg-brand-lime px-5 py-3 text-sm font-bold text-primary-dark"
+              >
+                Tambah Ternak Pertama
+              </button>
+            </div>
+          )}
+          {!isLoading && !error && animals.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {animals.slice(0, 4).map((animal) => (
+                <button
+                  key={animal.id}
+                  type="button"
+                  onClick={() => navigate(`/peternak/ternak/${animal.id}`)}
+                  className="rounded-2xl border border-[#E5EAE6] bg-[#F8FAF8] p-5 text-left transition hover:border-brand-green hover:bg-white"
+                >
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-lg font-bold text-brand-green shadow-sm">
+                      {getSpeciesIcon(animal.species)}
+                    </div>
+                    <span className="rounded-full bg-[#E8F5EC] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1D5937]">Terdaftar</span>
+                  </div>
+                  <h3 className="font-bold text-primary-dark">{animal.name}</h3>
+                  <p className="mt-1 text-sm text-[#69736C]">{animal.species} - {animal.age || 'Umur belum diisi'}</p>
+                  <p className="mt-4 border-t border-[#E5EAE6] pt-3 text-xs font-bold text-[#8D978F]">{getAnimalCode(animal)}</p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+
+        <aside className="h-fit rounded-[2rem] border border-[#E5EAE6] bg-white p-5 shadow-sm lg:sticky lg:top-8">
+          <h2 className="text-xl font-bold text-primary-dark">Aksi cepat</h2>
+          <div className="mt-5 grid gap-3">
+            <button type="button" onClick={onLapor} className="min-h-12 rounded-xl bg-brand-lime px-5 text-sm font-bold text-primary-dark">Buat Laporan</button>
+            <button type="button" onClick={() => navigate('/peternak/konsultasi')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Konsultasi</button>
+            <button type="button" onClick={() => navigate('/peternak/marketplace')} className="min-h-12 rounded-xl border border-[#D4DCD6] px-5 text-sm font-bold text-brand-green">Toko</button>
+          </div>
+          <div className="mt-5 rounded-2xl bg-[#EAF3FB] p-4 text-sm text-[#205580]">
+            <p className="font-bold">Catatan</p>
+            <p className="mt-2 leading-relaxed">Data kasus aktif akan tampil setelah laporan berhasil dibuat dan dokter dipilih.</p>
+          </div>
+        </aside>
+      </section>
     </div>
   );
 }

@@ -2,15 +2,18 @@ import { useState } from 'react'
 import AnimalList from '../../components/AnimalList'
 import CaseStatus from '../../components/CaseStatus'
 import DashboardShell from '../../components/DashboardShell'
+import { getFarmerDisplayName } from '../../services/farmerAuthService'
 import FarmerAcademyPage from './FarmerAcademyPage'
 
 function DashboardHome({ setActiveTab }) {
+  const farmerName = getFarmerDisplayName()
+
   return (
     <div className="space-y-8">
       <section className="rounded-[2rem] bg-brand-green p-6 text-white shadow-xl shadow-brand-green/10 md:p-8">
         <p className="text-sm font-bold text-brand-lime">Beranda Peternak</p>
         <h1 className="mt-3 text-3xl font-bold leading-tight md:text-4xl">
-          Selamat datang kembali, Masrukhi
+          Selamat datang kembali, {farmerName}
         </h1>
         <p className="mt-3 max-w-2xl leading-7 text-white/80">
           Pantau kondisi ternak, buat laporan kesehatan, dan lanjutkan konsultasi
