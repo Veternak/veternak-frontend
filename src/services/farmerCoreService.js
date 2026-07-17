@@ -76,6 +76,28 @@ export async function getConsultations() {
   return apiRequest('/consultations', { method: 'GET' })
 }
 
+export async function getConsultationsByStatus(status) {
+  return apiRequest(`/consultations?status=${status}`, { method: 'GET' })
+}
+
+export async function getCompletedConsultations() {
+  return apiRequest('/consultations?status=COMPLETED', { method: 'GET' })
+}
+
 export async function cancelConsultation(id) {
   return apiRequest(`/consultations/${id}/cancel`, { method: 'POST' })
+}
+
+export async function endConsultation(id) {
+  return apiRequest(`/consultations/${id}/end`, { 
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export async function completeConsultation(id) {
+  return apiRequest(`/consultations/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'COMPLETED' })
+  })
 }

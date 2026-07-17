@@ -17,8 +17,8 @@ const menuItems = [
   { id: 'dashboard', label: 'Beranda', icon: 'home', path: '/peternak/dashboard' },
   { id: 'gejala', label: 'Input Gejala', icon: 'plus', isCta: true, path: '/peternak/lapor' },
   { id: 'konsultasi', label: 'Konsultasi', icon: 'chat', path: '/peternak/konsultasi' },
-  { id: 'marketplace', label: 'Toko', icon: 'store', path: '/peternak/marketplace' },
-  { id: 'akademi', label: 'Akademi', icon: 'book', path: '/peternak/akademi', desktopOnly: true },
+  // { id: 'marketplace', label: 'Toko', icon: 'store', path: '/peternak/marketplace' },
+  // { id: 'akademi', label: 'Akademi', icon: 'book', path: '/peternak/akademi', desktopOnly: true },
   { id: 'profil', label: 'Profil', icon: 'user', path: '/peternak/profil', desktopOnly: true },
 ];
 
@@ -50,6 +50,7 @@ export default function DashboardShell() {
   };
 
   return (
+    // navigation
     <div className="min-h-screen overflow-x-hidden bg-[#F8FAF8] md:flex">
       <aside className="fixed hidden h-full w-64 flex-col border-r border-gray-100 bg-white md:flex overflow-y-auto">
         <div className="p-8 pb-4">
@@ -78,8 +79,8 @@ export default function DashboardShell() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Peternak</p>
             </div>
           </button>
-          <button type="button" onClick={handleLogout} className="text-left text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600">
-            Keluar
+          <button type="button" onClick={handleLogout} className="flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 py-2 rounded">
+            Keluar  
           </button>
         </div>
       </aside>
