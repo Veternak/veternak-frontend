@@ -180,14 +180,22 @@ export default function ScreeningForm() {
   const lastPredictionKeyRef = useRef("");
 
   const doctors = useMemo(() => {
-    if (!backendVets.length) return fallbackDoctors;
+    const list = backendVets.length ? backendVets : [];
+    
+    // FILTER: only include veterinarians with distance < 20.0 km
+    const filtered = list.filter((vet) => {
+      return vet.distanceKm !== null && vet.distanceKm !== undefined && Number(vet.distanceKm) < 20.0;
+    });
 
-    return backendVets.map((vet) => ({
+    // SORT: by distance ascending (closest first)
+    const sorted = [...filtered].sort((a, b) => Number(a.distanceKm) - Number(b.distanceKm));
+
+    return sorted.map((vet) => ({
       id: vet.id,
       name: vet.name,
       expertise: `${vet.experienceYears || 0} tahun pengalaman`,
       area: [vet.district, vet.regency, vet.province].filter(Boolean).join(', ') || 'Area belum diisi',
-      distance: vet.distanceKm ? `${vet.distanceKm} km` : 'Jarak belum tersedia',
+      distance: `${Number(vet.distanceKm).toFixed(1)} km`,
       eta: vet.canVisit ? 'Kunjungan tersedia' : 'Chat tersedia',
       visit: vet.canVisit ? 'Kunjungan tersedia' : 'Chat dulu',
       photo: vet.profilePicture || 'https://i.pravatar.cc/160?img=47',
@@ -579,45 +587,71 @@ export default function ScreeningForm() {
               <p className="mb-6 text-sm text-[#69736C]">Hasil diagnosis prediksi AI siap ditampilkan. Pilih dokter hewan untuk mengirim konsultasi resmi.</p>
 
               <div className="space-y-6">
-                {diagnosisData ? (
-                  <section className="rounded-3xl border border-brand-green/20 bg-brand-soft/30 p-6 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-green mb-3">
-                      Hasil Prediksi Asisten Veternak AI
-                    </p>
-                    <h3 className="text-2xl font-extrabold text-primary-dark">
-                      {diagnosisData.diseaseName}
-                    </h3>
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-                        diagnosisData.urgencyLevel === 'HIGH' 
-                          ? 'bg-rose-100 text-rose-800' 
-                          : diagnosisData.urgencyLevel === 'MEDIUM' 
-                            ? 'bg-amber-100 text-amber-800' 
-                            : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        Urgensi: {diagnosisData.urgencyLevel === 'HIGH' ? 'TINGGI' : diagnosisData.urgencyLevel === 'MEDIUM' ? 'SEDANG' : 'RENDAH'}
-                      </span>
-                    </div>
-
-                    <div className="mt-5 space-y-4">
-                      <div className="rounded-2xl bg-white p-5 border border-gray-100">
-                        <h4 className="font-bold text-primary-dark mb-2 font-black">Deskripsi Penyakit</h4>
-                        <p className="text-sm leading-relaxed text-[#505B53]">
-                          {diagnosisData.description}
-                        </p>
-                      </div>
-
-                      {diagnosisData.aiDiagnosisSummary && (
-                        <div className="rounded-2xl bg-white p-5 border border-gray-100">
-                          <h4 className="font-bold text-primary-dark mb-3 font-black">Detail Deskriptif Diagnosis & Penanganan</h4>
-                          <div className="whitespace-pre-wrap text-sm leading-relaxed text-[#505B53] font-medium font-sans">
-                            {diagnosisData.aiDiagnosisSummary}
-                          </div>
+                {diagnosisData ? (() => {
+                  const isHealthy = diagnosisData.diseaseId === 0 || 
+                                    String(diagnosisData.diseaseName || "").toLowerCase().includes("tidak ada indikasi") || 
+                                    String(diagnosisData.simpleDiseaseName || "").toLowerCase() === "sehat" ||
+                                    diagnosisData.urgencyLevel === "LOW";
+                  return (
+                    <>
+                      {/* DYNAMIC DESCRIPTIVE SUMMARY DEPENDING ON THE CONDITION */}
+                      <section className="rounded-3xl border border-brand-green/20 bg-brand-soft/20 p-6 shadow-sm">
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-green mb-2">Penilaian Kondisi Utama</p>
+                        <h3 className="text-xl font-extrabold text-primary-dark mb-3">
+                          Diagnosis Teratas: {diagnosisData.diseaseName}
+                        </h3>
+                        <div className="rounded-2xl bg-white p-5 border border-gray-100 shadow-xs">
+                          <p className="text-sm font-semibold leading-relaxed text-[#505B53]">
+                            {isHealthy 
+                              ? `✅ Informasi: Hewan ternak Anda berada dalam kondisi stabil atau hanya menunjukkan indikasi gangguan kesehatan ringan (${diagnosisData.diseaseName}). Pastikan kebersihan kandang terjaga dan pakan bergizi tetap diberikan.`
+                              : diagnosisData.urgencyLevel === 'HIGH' 
+                                ? `⚠️ Peringatan Penting: Hewan ternak Anda terindikasi mengalami penyakit dengan tingkat urgensi TINGGI (${diagnosisData.diseaseName}). Disarankan untuk segera melakukan isolasi mandiri pada hewan ini agar tidak menulari kelompok ternak lainnya, terapkan langkah penanganan darurat, dan pilih dokter hewan terdekat di bawah untuk kunjungan lapangan.`
+                                : `🔔 Perhatian: Hewan ternak Anda menunjukkan gejala penyakit tingkat urgensi SEDANG (${diagnosisData.diseaseName}). Tetap pantau secara berkala kondisi fisik dan nafsu makannya, pisahkan sementara jika perlu, dan konsultasikan secara daring dengan dokter hewan.`
+                            }
+                          </p>
                         </div>
+                      </section>
+
+                      {/* TOP 3 DISEASES BY PROBABILITY */}
+                      {diagnosisData.predictions && diagnosisData.predictions.length > 0 && (
+                        <section className="rounded-3xl border border-[#E5EAE6] bg-white p-6 shadow-sm">
+                          <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-brand-green">Top 3 Kemungkinan Penyakit Terbesar</p>
+                          <div className="grid gap-4">
+                            {diagnosisData.predictions.slice(0, 3).map((item, index) => (
+                              <div key={item.id || item.name} className="rounded-2xl bg-[#F8FAF8] border border-gray-100 p-5 hover:border-brand-green/30 transition-all">
+                                <div className="flex items-start gap-4">
+                                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-base font-extrabold text-brand-green">
+                                    {index + 1}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-extrabold text-lg text-primary-dark">{item.name}</h4>
+                                    <p className="mt-2 text-sm leading-relaxed text-[#505B53]">{item.description}</p>
+                                    
+                                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                                      <span className={`rounded-full px-3 py-1 uppercase tracking-wider ${
+                                        item.urgencyLevel === 'HIGH' 
+                                          ? 'bg-rose-100 text-rose-800' 
+                                          : item.urgencyLevel === 'MEDIUM' 
+                                            ? 'bg-amber-100 text-amber-800' 
+                                            : 'bg-emerald-100 text-emerald-800'
+                                      }`}>
+                                        Urgensi: {item.urgencyLevel === 'HIGH' ? 'TINGGI' : item.urgencyLevel === 'MEDIUM' ? 'SEDANG' : 'RENDAH'}
+                                      </span>
+                                    </div>
+
+                                    <p className="mt-3 text-xs leading-relaxed text-brand-green font-bold">
+                                      <span className="text-[#69736C] font-semibold">Penanganan Pertama:</span> {item.handling}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
                       )}
-                    </div>
-                  </section>
-                ) : isSubmittingReport ? (
+                    </>
+                  );
+                })() : isSubmittingReport ? (
                   <div className="rounded-2xl bg-brand-soft p-8 text-center text-sm font-semibold text-brand-green">
                     Menghitung hasil prediksi berdasarkan model screening AI...
                   </div>
