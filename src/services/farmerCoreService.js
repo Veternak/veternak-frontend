@@ -44,3 +44,21 @@ export async function createConsultation(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export async function requestVisit(consultationId, payload) {
+  return apiRequest(`/consultations/${consultationId}/visit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function getVetById(id) {
+  return apiRequest(`/vets/${id}`, { method: 'GET' })
+}
+
+export async function getFarmerDashboard() {
+  return apiRequest('/farmer/dashboard', { method: 'GET' })
+}
+
+
+

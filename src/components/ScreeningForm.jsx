@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { buildDiagnosisPayload, diagnoseAnimal } from "../services/aiDiagnosisService";
 import { createAnimal, createConsultation, getAnimalById, getVets } from "../services/farmerCoreService";
 
@@ -137,6 +137,7 @@ function ArrowIcon() {
 }
 
 export default function ScreeningForm() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const animalIdFromQuery = searchParams.get("animalId");
   const [step, setStep] = useState(0);
@@ -328,6 +329,9 @@ export default function ScreeningForm() {
       });
       setConsultationResult(consultation.data);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        navigate("/peternak/konsultasi");
+      }, 2500);
     } catch (error) {
       setDiagnosisError(error?.message || "Gagal membuat konsultasi. Coba lagi.");
     } finally {
