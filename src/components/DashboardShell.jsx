@@ -22,17 +22,15 @@ export default function DashboardShell() {
   const menuItems = [
     { id: "dashboard", label: "Beranda", icon: "home", path: "/peternak/dashboard" },
     { id: "ternak", label: "Ternak", icon: "list", path: "/peternak/ternak" },
-    { id: "lapor", label: "Lapor", icon: "plus", isCta: true, path: "/peternak/lapor" },
+    { id: "lapor", label: "Lapor", icon: "plus", isCta: true, path: "/peternak/lapor" }, // CENTER
     { id: "konsultasi", label: "Konsultasi", icon: "chat", path: "/peternak/konsultasi" },
-    { id: "akademi", label: "Akademi", icon: "book", path: "/peternak/akademi" },
     { id: "marketplace", label: "Toko", icon: "store", path: "/peternak/marketplace" },
     { id: "profil", label: "Profil", icon: "user", path: "/peternak/profil", desktopOnly: true },
   ];
   
-  return (
-    <div className="min-h-screen bg-[#F8FAF8] flex flex-col md:flex-row">
-      
-      {/* --- DESKTOP SIDEBAR --- */}
+return (
+    <div className="min-h-screen bg-[#F8FAF8] flex flex-col md:flex-row overflow-x-hidden">
+      {/* DESKTOP SIDEBAR (Keep as is) */}
       <aside className="hidden md:flex w-64 bg-white border-r border-gray-100 flex-col fixed h-full z-50">
         <div className="p-8 pb-4">
           <img 
@@ -82,7 +80,7 @@ export default function DashboardShell() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-grow md:ml-64 p-4 md:p-10 pb-28 md:pb-10">
+      <main className="flex-grow md:ml-64 p-4 md:p-10 pb-32 md:pb-10 w-full max-w-full overflow-x-hidden">
         {/* Mobile Header */}
         <div className="md:hidden flex justify-between items-center mb-6 pt-4 px-2">
           <img src={logo} alt="Veternak Logo" className="h-10 w-auto object-contain" />
@@ -99,28 +97,31 @@ export default function DashboardShell() {
         <Outlet />
       </main>
 
-      {/* --- MOBILE BOTTOM NAV --- */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 px-2 py-3 flex justify-around items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {menuItems.filter((item) => !item.desktopOnly).map((item) => (
-          <button
-            key={item.id}
-            onClick={() => navigate(item.path)}
-            className={`flex flex-col items-center gap-1 relative ${
-              item.isCta ? "-top-6" : ""
-            }`}
-          >
-            {item.isCta ? (
-              <div className="w-14 h-14 bg-brand-lime rounded-full flex items-center justify-center text-primary-dark shadow-lg shadow-brand-lime/40 border-4 border-white">
-                <Icon name={item.icon} />
-              </div>
-            ) : (
-              <div className={`transition-colors ${location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) ? "text-brand-green" : "text-gray-300"}`}>
-                <div className="flex justify-center"><Icon name={item.icon} /></div>
-                <span className="text-[9px] font-bold block mt-0.5">{item.label}</span>
-              </div>
-            )}
-          </button>
-        ))}
+  {/* MOBILE BOTTOM NAV - THE "PERFECT CENTER" FIX */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 h-20 flex items-center z-[100] shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex w-full justify-between items-center px-2">
+          {menuItems.filter(item => !item.desktopOnly).map((item, index) => (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.path)}
+              className="flex-1 flex flex-col items-center justify-center"
+            >
+              {item.isCta ? (
+                <div className="relative -top-7 flex flex-col items-center">
+                   <div className="w-16 h-16 bg-brand-lime rounded-full flex items-center justify-center text-primary-dark shadow-xl shadow-brand-lime/40 border-[6px] border-white active:scale-90 transition-all">
+                    <Icon name={item.icon} />
+                  </div>
+                  <span className="text-[10px] font-black text-brand-green mt-1">LAPOR</span>
+                </div>
+              ) : (
+                <div className={`flex flex-col items-center transition-colors ${location.pathname === item.path ? "text-brand-green" : "text-gray-300"}`}>
+                  <Icon name={item.icon} />
+                  <span className="text-[10px] font-bold mt-1">{item.label}</span>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
       </nav>
     </div>
   );

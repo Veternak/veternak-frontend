@@ -406,42 +406,86 @@ export default function FarmerHome({ onLapor }) {
           </div>
         </div>
       </div>
-
-      {/* 6. Recommended Academy Editorial Section */}
+{/* 6. Recommended Academy Carousel Section */}
       <div className="pt-2 space-y-4">
-        <h4 className="text-base sm:text-lg font-bold text-primary-dark px-1">Tips & Edukasi Hari Ini</h4>
-        <div 
-          onClick={() => navigate('/peternak/akademi')}
-          className="bg-[#FBF9EE] rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row gap-5 items-stretch sm:items-center border border-[#EFE9D5] hover:shadow-md transition-shadow cursor-pointer"
-        >
-          <div className="flex-grow space-y-2 flex flex-col justify-between">
-            <div>
-              <span className="inline-block text-[9px] font-bold text-yellow-850 bg-yellow-100/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Biosecurity & Sanitasi
-              </span>
-              <h5 className="font-serif text-xl sm:text-2xl text-primary-dark leading-snug mt-1.5">
-                Pentingnya Sanitasi Kandang Pasca Melahirkan
-              </h5>
-              <p className="text-xs text-gray-500 leading-relaxed mt-1">
-                Pelajari metode disinfeksi kandang yang aman untuk mencegah penularan kuman dan infeksi tali pusar pada anak sapi yang baru lahir.
-              </p>
+        <div className="flex justify-between items-center px-1">
+          <h4 className="text-base sm:text-lg font-bold text-primary-dark">Tips & Edukasi Hari Ini</h4>
+          <button 
+            onClick={() => navigate('/peternak/akademi')}
+            className="text-xs font-bold text-brand-green bg-brand-soft/50 px-3 py-1.5 rounded-lg hover:bg-brand-soft transition-colors"
+          >
+            Lihat Semua
+          </button>
+        </div>
+
+        {/* Horizontal Carousel Container */}
+        <div className="flex gap-4 overflow-x-auto pb-8 pt-1 px-4 -mx-4 scrollbar-none snap-x snap-mandatory">
+          {[
+            {
+              category: "Biosecurity & Sanitasi",
+              title: "Sanitasi Kandang Pasca Melahirkan",
+              desc: "Pelajari metode disinfeksi kandang yang aman untuk mencegah penularan kuman pada anak sapi.",
+              author: "drh. Siti Aminah",
+              time: "4 Menit",
+              img: "https://images.unsplash.com/photo-1594140733592-2374662df94d?auto=format&fit=crop&q=80&w=300"
+            },
+            {
+              category: "Nutrisi & Pakan",
+              title: "Formulasi Pakan Musim Kemarau",
+              desc: "Cara menjaga bobot sapi tetap stabil meskipun ketersediaan rumput hijau menurun.",
+              author: "drh. Oktavianus",
+              time: "6 Menit",
+              img: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&q=80&w=300"
+            },
+            {
+              category: "Manajemen",
+              title: "Mengenal Siklus Birahi Sapi",
+              desc: "Tanda-tanda fisik yang perlu diperhatikan untuk keberhasilan program inseminasi buatan.",
+              author: "drh. Ahmad",
+              time: "5 Menit",
+              img: "https://images.unsplash.com/photo-1545468130-14b223c5ee91?auto=format&fit=crop&q=80&w=300"
+            }
+          ].map((tip, index) => (
+            <div 
+              key={index}
+              onClick={() => navigate('/peternak/akademi')}
+              className="min-w-[290px] sm:min-w-[420px] bg-[#FBF9EE] rounded-[2.5rem] p-5 sm:p-6 flex flex-col justify-between border border-[#EFE9D5] shadow-sm hover:shadow-md transition-all cursor-pointer snap-start"
+            >
+              <div className="flex gap-4 items-start">
+                <div className="flex-grow space-y-2">
+                  <span className="inline-block text-[9px] font-bold text-yellow-800 bg-yellow-100/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    {tip.category}
+                  </span>
+                  <h5 className="font-serif text-lg sm:text-xl text-primary-dark leading-tight line-clamp-2">
+                    {tip.title}
+                  </h5>
+                  <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+                    {tip.desc}
+                  </p>
+                </div>
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-standard-border/10">
+                  <img 
+                    src={tip.img} 
+                    className="w-full h-full object-cover" 
+                    alt={tip.title}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-4 mt-4 border-t border-yellow-200/40">
+                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold">
+                  <span>{tip.author}</span>
+                  <span>•</span>
+                  <span>{tip.time} Baca</span>
+                </div>
+                <div className="text-brand-green font-bold text-[10px] flex items-center gap-1">
+                  Baca <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 pt-1 text-[10px] text-gray-400 font-semibold">
-              <span>drh. Siti Aminah</span>
-              <span>•</span>
-              <span>4 Menit Baca</span>
-            </div>
-          </div>
-          <div className="w-full sm:w-28 sm:h-28 h-36 bg-gray-200 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-standard-border/10">
-            <img 
-              src="https://images.unsplash.com/photo-1594140733592-2374662df94d?auto=format&fit=crop&q=80&w=300" 
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-              alt="Cows in farm"
-            />
-          </div>
+          ))}
         </div>
       </div>
-
     </div>
   );
 }
