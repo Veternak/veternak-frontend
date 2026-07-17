@@ -2,6 +2,25 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getConsultationById, payTransaction, cancelConsultation } from "../../services/farmerCoreService";
 
+function ProfileAvatarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8 text-brand-green" aria-hidden="true">
+      <path
+        d="M12 12.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M4.5 19.5c1.7-3.2 4.4-4.8 7.5-4.8s5.8 1.6 7.5 4.8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.18" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
 export default function FarmerPaymentPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -123,11 +142,17 @@ export default function FarmerPaymentPage() {
             <div className="rounded-2xl bg-neutral-bg p-5 border border-gray-100">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Detail Dokter</h3>
               <div className="flex gap-4 items-center">
-                <img
-                  src={vet.profilePicture || "https://i.pravatar.cc/180?img=47"}
-                  alt={vet.name}
-                  className="h-16 w-16 rounded-xl object-cover"
-                />
+                {vet.profilePicture ? (
+                  <img
+                    src={vet.profilePicture}
+                    alt={vet.name}
+                    className="h-16 w-16 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-xl bg-neutral-bg border border-[#E5EAE6] flex items-center justify-center">
+                    <ProfileAvatarIcon />
+                  </div>
+                )}
                 <div>
                   <h4 className="font-bold text-primary-dark">{vet.name}</h4>
                   <p className="text-xs text-[#69736C]">{vet.experienceYears || 0} Tahun Pengalaman</p>

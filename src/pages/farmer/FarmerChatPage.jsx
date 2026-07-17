@@ -116,6 +116,17 @@ export default function FarmerChatPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  function MessageBody({ text }) {
+    return <p className="mt-1 font-semibold whitespace-pre-wrap">{text}</p>;
+  }
+
+  function getMessageRole(message) {
+    if (message?.senderRole) return String(message.senderRole).toUpperCase();
+    if (message?.vetSenderId) return 'VET';
+    if (message?.farmerSenderId) return 'FARMER';
+    return 'SYSTEM';
+  }
+
   // Handle socket incoming message
   const handleIncomingMessage = useCallback((message) => {
     setMessages((current) => {
