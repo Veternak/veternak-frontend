@@ -9,6 +9,43 @@ import { useChatSocket } from '../../services/socket'
 
 const productRecommendationPrefix = '[REKOMENDASI_PRODUK]'
 
+const demoCaseDetail = {
+  id: 'demo',
+  status: 'ACTIVE',
+  urgencyLevel: 'MEDIUM',
+  animal: {
+    name: 'Sapi Demo',
+    species: 'Sapi',
+  },
+  farmer: {
+    name: 'Peternak Demo',
+    district: 'Sleman',
+    regency: 'Yogyakarta',
+  },
+  aiDiagnosisSummary: 'Ringkasan gejala demo:\n- Ternak terlihat lemas\n- Nafsu makan turun\n- Perlu observasi dan konsultasi lanjutan',
+}
+
+const demoMessages = [
+  {
+    id: 'demo-1',
+    senderRole: 'FARMER',
+    message: 'Dok, sapi saya sejak pagi terlihat lemas dan tidak mau makan.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 9).toISOString(),
+  },
+  {
+    id: 'demo-2',
+    senderRole: 'VET',
+    message: 'Baik, pisahkan dulu dari ternak lain dan pastikan air bersih tersedia. Saya akan bantu pantau dari gejalanya.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+  },
+  {
+    id: 'demo-3',
+    senderRole: 'VET',
+    message: buildProductRecommendation(marketplaceProducts[1]),
+    createdAt: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
+  },
+]
+
 function buildProductRecommendation(product) {
   return [
     productRecommendationPrefix,
@@ -61,6 +98,7 @@ function MessageBody({ text }) {
 
 export default function DoctorConsultationPage() {
   const { id } = useParams()
+  const isDemo = id === 'demo'
   const [caseDetail, setCaseDetail] = useState(null)
   const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
@@ -79,6 +117,15 @@ export default function DoctorConsultationPage() {
     let isMounted = true
     setIsLoading(true)
     setError('')
+
+    if (isDemo) {
+      setCaseDetail(demoCaseDetail)
+      setMessages(demoMessages)
+      setIsLoading(false)
+      return () => {
+        isMounted = false
+      }
+    }
 
     Promise.all([
       getConsultationById(id),
@@ -99,7 +146,7 @@ export default function DoctorConsultationPage() {
     return () => {
       isMounted = false
     }
-  }, [id])
+  }, [id, isDemo])
 
   // Handle incoming message from socket
   const handleIncomingMessage = useCallback((message) => {
@@ -111,13 +158,29 @@ export default function DoctorConsultationPage() {
   }, [])
 
   // Connect socket.io
-  const { isConnected, sendMessage } = useChatSocket(id, handleIncomingMessage)
+  const { isConnected, sendMessage } = useChatSocket(isDemo ? null : id, handleIncomingMessage)
+
+  const appendDemoMessage = (text) => {
+    setMessages((current) => [
+      ...current,
+      {
+        id: `demo-${Date.now()}`,
+        senderRole: 'VET',
+        message: text,
+        createdAt: new Date().toISOString(),
+      },
+    ])
+  }
 
   const handleSend = (e) => {
     e.preventDefault()
     if (!draft.trim()) return
 
-    sendMessage(draft.trim())
+    if (isDemo) {
+      appendDemoMessage(draft.trim())
+    } else {
+      sendMessage(draft.trim())
+    }
     setDraft('')
   }
 
@@ -129,6 +192,10 @@ export default function DoctorConsultationPage() {
 
   const handleSendProduct = (product) => {
     const message = buildProductRecommendation(product)
+    if (isDemo) {
+      appendDemoMessage(message)
+      return
+    }
     if (isConnected) {
       sendMessage(message)
       return
@@ -169,11 +236,11 @@ export default function DoctorConsultationPage() {
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
                 isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
               }`}>
-                {isConnected ? 'Terhubung' : 'Terputus'}
+                {isDemo ? 'Mode Demo' : isConnected ? 'Terhubung' : 'Terputus'}
               </span>
             </div>
             <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-primary-dark">Konsultasi {caseDetail.animal?.name || 'Ternak'}</h1>
-            <p className="mt-2 text-sm text-gray-600">Pesan Anda terkirim secara langsung dan real-time ke aplikasi Peternak.</p>
+            <p className="mt-2 text-sm text-gray-600">{isDemo ? 'Tampilan demo chat dokter tanpa backend.' : 'Pesan Anda terkirim secara langsung dan real-time ke aplikasi Peternak.'}</p>
           </div>
           <CasePriorityBadge label={urgencyLabel} urgency={caseDetail.urgencyLevel} />
         </div>
@@ -223,12 +290,12 @@ export default function DoctorConsultationPage() {
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Tulis pesan untuk peternak..."
             value={draft}
-            disabled={!isConnected}
+            disabled={!isDemo && !isConnected}
           />
           <button
             className="min-h-12 rounded-xl bg-brand-lime px-5 py-3 text-sm font-bold text-primary-dark shadow-sm hover:bg-[#78B916] transition-colors disabled:opacity-60"
             type="submit"
-            disabled={!isConnected || !draft.trim()}
+            disabled={(!isDemo && !isConnected) || !draft.trim()}
           >
             Kirim
           </button>
@@ -285,7 +352,7 @@ export default function DoctorConsultationPage() {
                   onClick={() => handleSendProduct(product)}
                   className="mt-3 min-h-10 w-full rounded-xl bg-brand-lime px-4 text-xs font-bold text-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isConnected ? 'Kirim ke chat' : 'Masukkan ke draft'}
+                  {isDemo || isConnected ? 'Kirim ke chat' : 'Masukkan ke draft'}
                 </button>
               </article>
             ))}
