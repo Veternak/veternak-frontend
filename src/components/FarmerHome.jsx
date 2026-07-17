@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFarmerDisplayName } from '../services/farmerAuthService';
-import { getAnimals, createAnimal } from '../services/farmerCoreService';
+import { getAnimals, createAnimal, getFarmerDashboard } from '../services/farmerCoreService';
 
 const speciesOptions = ["Sapi", "Kerbau", "Kambing", "Domba"];
 const genderOptions = [
@@ -26,6 +26,12 @@ export default function FarmerHome({ onLapor }) {
   const navigate = useNavigate();
   const farmerName = getFarmerDisplayName();
   const [animals, setAnimals] = useState([]);
+  const [dashboardData, setDashboardData] = useState({
+    totalAnimals: 0,
+    totalConsultations: 0,
+    activeConsultations: [],
+    pendingConsultations: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -41,26 +47,35 @@ export default function FarmerHome({ onLapor }) {
   const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const loadAnimals = () => {
+  const loadData = () => {
     setIsLoading(true);
-    getAnimals()
-      .then((response) => {
-        setAnimals(response?.data?.animals || []);
+    Promise.all([
+      getAnimals(),
+      getFarmerDashboard()
+    ])
+      .then(([animalsRes, dashboardRes]) => {
+        setAnimals(animalsRes?.data?.animals || []);
+        setDashboardData(dashboardRes?.data || {
+          totalAnimals: 0,
+          totalConsultations: 0,
+          activeConsultations: [],
+          pendingConsultations: 0,
+        });
         setError('');
       })
-      .catch((err) => setError(err?.message || 'Gagal memuat data ternak.'))
+      .catch((err) => setError(err?.message || 'Gagal memuat data.'))
       .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
-    loadAnimals();
+    loadData();
   }, []);
 
   const stats = useMemo(() => [
-    { label: 'Ternak aktif', value: animals.length, tone: 'text-emerald-700 bg-emerald-50' },
-    { label: 'Kasus aktif', value: 0, tone: 'text-amber-700 bg-amber-50' },
-    { label: 'Perlu dokter', value: 0, tone: 'text-rose-700 bg-rose-50' },
-  ], [animals.length]);
+    { label: 'Ternak aktif', value: dashboardData.totalAnimals, tone: 'text-emerald-700 bg-emerald-50' },
+    { label: 'Kasus aktif', value: dashboardData.activeConsultations?.length || 0, tone: 'text-amber-700 bg-amber-50' },
+    { label: 'Kasus pending', value: dashboardData.pendingConsultations || 0, tone: 'text-rose-700 bg-rose-50' },
+  ], [dashboardData]);
 
   const handleOpenModal = () => {
     setForm({ name: "", species: "Sapi", age: "", gender: "MALE" });
@@ -106,7 +121,7 @@ export default function FarmerHome({ onLapor }) {
         gender: form.gender,
       });
       setShowAddModal(false);
-      loadAnimals();
+      loadData();
     } catch (err) {
       setSubmitError(err?.message || "Gagal menyimpan data ternak.");
     } finally {
